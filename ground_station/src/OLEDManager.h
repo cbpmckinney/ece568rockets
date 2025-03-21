@@ -1,2 +1,0 @@
-// Chris Silman
-// OLED Class
