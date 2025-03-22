@@ -11,7 +11,7 @@ William Li
 #include "OLEDManager.h"
 
 MainScreen mainScreen = MainScreen();
-//AuxillaryScreen display2 = AuxillaryScreen()
+AuxillaryScreen auxScreen = AuxillaryScreen();
 
 void setup() {
   // put your setup code here, to run once:
@@ -37,6 +37,16 @@ void initializeScreens() {
   mainScreen.display.println(F("MainScreen to main, do you read?"));
 
   mainScreen.display.display();
+
+  auxScreen.display.begin(0x3C, true);
+  auxScreen.display.clearDisplay();
+
+  auxScreen.display.setTextSize(1);             // Normal 1:1 pixel scale
+  auxScreen.display.setTextColor(SH110X_WHITE);        // Draw white text
+  auxScreen.display.setCursor(0,0);             // Start at top-left corner
+  auxScreen.display.println(F("AuxScreen to main, do you read?"));
+
+  auxScreen.display.display();
 
   Serial.print("Wrote!");
 

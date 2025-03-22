@@ -16,14 +16,13 @@ class MainScreen {
   public:
     Adafruit_SH1107 display = Adafruit_SH1107(SCREEN_WIDTH, SCREEN_HEIGHT, &Wire, OLED_RESET, 1000000, 100000);
     uint8_t menu_pointer;
-    void initializeDisplay();
+    void hello();
 };
 
-class AuxillaryScreen : public OLEDScreen {
+class AuxillaryScreen {
   public:
     Adafruit_SH1107 display = Adafruit_SH1107(SCREEN_WIDTH, SCREEN_HEIGHT, &Wire, OLED_RESET, 1000000, 100000);
     uint8_t menu_pointer;
-    void initializeDisplay();
 };
 
 
