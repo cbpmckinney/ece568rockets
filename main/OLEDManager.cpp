@@ -1,5 +1,6 @@
 #include "OLEDManager.h"
+#include "Arduino.h"
 
-OLEDScreen::OLEDScreen(Adafruit_SH1107 managed_display) 
-: display(managed_display)
-{}
+void MainScreen::hello() {
+    Serial.print("Class call test!");
+}
