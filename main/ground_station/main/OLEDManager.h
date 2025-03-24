@@ -1,5 +1,11 @@
-// Chris Silman
-// OLED Class
+/*********************************************************************
+OLED Screen Header File
+    This file is a bit atypical of a standard header file, however, it
+    declares all the classes, members, and methods of the OLED screens.
+
+Written by:
+Chris Silman
+*********************************************************************/
 
 #ifndef _OLEDManager_
 #define _OLEDManager_ 
@@ -64,9 +70,12 @@ enum SelectedScreen {
 
 class MainScreen {
   public:
+    // CLASS DATA MEMBERS
     Adafruit_SH1107 display = Adafruit_SH1107(SCREEN_WIDTH, SCREEN_HEIGHT, &Wire, OLED_RESET, 1000000, 100000);
     ScreenSelectionIndex screenSelectionIndexes = {0, 0};
     SelectedScreen selectedScreen = MENU;
+
+    // CLASS METHODS
     bool data_screen_enabled;
     bool rocket_armed;
     void initialize(uint8_t i2caddr);

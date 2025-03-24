@@ -1,3 +1,15 @@
+/*********************************************************************
+OLED Screen Implementation File
+    Here is where you define all the methods that were declares in the
+    header file.
+
+    Since the header file contains two difference classes, the scope
+    operator (::) distinguishes which methods belong to which class.
+
+Written by:
+Chris Silman
+*********************************************************************/
+
 #include "OLEDManager.h"
 #include "Arduino.h"
 
@@ -58,6 +70,7 @@ void MainScreen::updateRocketData(RocketData data) {
 void MainScreen::receiveScreenInput(UserInput input) {
     uint8_t* selectedIndex = NULL;
 
+    // Grab correct index
     switch (selectedScreen) {
         case MENU:
             selectedIndex = &screenSelectionIndexes.menuIndex;
@@ -75,48 +88,45 @@ void MainScreen::receiveScreenInput(UserInput input) {
             selectedIndex = &screenSelectionIndexes.settingsIndex;
             break;
         default:
-            //invalid
+            // Invalid screen
             return;
       }
 
-    //*selectedIndex = *selectedIndex+1;
+      Serial.print("Index before: "); Serial.println(*selectedIndex);
 
-    /*
+    // Command handling
+    switch (input) {
+        case ENC_LEFT:
+            // if encoder turned left, move up one menu option
+            if (*selectedIndex > 0) {
+                *selectedIndex = *selectedIndex-1;
+            }
+            break;
+        case ENC_RIGHT:
+            // if encoder turned right, move down one menu option
+            if (*selectedIndex < MAX_MENU_OPTIONS) {
+                *selectedIndex = *selectedIndex+1;
+            }
+            break;
+        case ENC_PRESS:
+            // statements
+            break;
+        case BIG_RED:
+            // statements
+            break;
+        case KEY_ON:
+            // statements
+            break;
+        case KEY_OFF:
+            // statements
+            break;
+        default:
+            // Invalid input
+            return;
+      }
 
-    if (input == ENC_LEFT) {
-        if (screenSelectionPointers.menuPointer > 0) {
-            screenSelectionPointers.menuPointer--;
-        }
-        
+      Serial.print("Index after: "); Serial.println(*selectedIndex);
 
-        switch (var) {
-            case label1:
-              // statements
-              break;
-            case label2:
-              // statements
-              break;
-            default:
-              // statements
-              break;
-          }
-        
-    } else if (input == ENC_RIGHT) {
-        if (screenSelectionPointers.menuPointer < MAX_MENU_OPTIONS) {
-            screenSelectionPointers.menuPointer--;
-        }
-    } else if (input == ENC_PRESS) {
-        
-    } else if (input == BIG_RED) {
-
-    } else if (input = KEY_ON) {
-
-    } else if (input = KEY_OFF) {
-
-    }
-    else {
-        Serial.println("Invalid Input")
-    }*/
     Serial.println("Called receiveScreenInput");
 }
 
