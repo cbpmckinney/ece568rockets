@@ -20,6 +20,7 @@ Chris Silman
 #include <Arduino.h>
 #include <memory>
 
+// Expected structure of local data
 struct LocalData {
     int temp;
     int humidity;
@@ -28,6 +29,7 @@ struct LocalData {
     int gps; // temporary, likely will be an array
 };
 
+// Expected structure of rocket data
 struct RocketData {
     int temp;
     int humidity;
@@ -43,6 +45,8 @@ struct RocketData {
     int gravityVector;
 };
 
+// Represents the index at which the user was last on for screens that
+// have the option to select items
 struct ScreenSelectionIndex {
     uint8_t menuIndex;
     uint8_t dataIndex;
@@ -51,6 +55,7 @@ struct ScreenSelectionIndex {
     uint8_t settingsIndex;
 };
 
+// Represents possible user inputs
 enum UserInput {
     ENC_LEFT,
     ENC_RIGHT,
@@ -60,6 +65,7 @@ enum UserInput {
     KEY_OFF
 };
 
+// Represents what screen the user is currently on
 enum SelectedScreen {
     MENU,
     DATA,
@@ -74,10 +80,10 @@ class MainScreen {
     Adafruit_SH1107 display = Adafruit_SH1107(SCREEN_WIDTH, SCREEN_HEIGHT, &Wire, OLED_RESET, 1000000, 100000);
     ScreenSelectionIndex screenSelectionIndexes = {0, 0};
     SelectedScreen selectedScreen = MENU;
-
-    // CLASS METHODS
     bool data_screen_enabled;
     bool rocket_armed;
+
+    // CLASS METHODS
     void initialize(uint8_t i2caddr);
     void clearDisplay();
     void showMenu();
