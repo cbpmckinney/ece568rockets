@@ -53,6 +53,12 @@ struct ScreenSelectionIndex {
     uint8_t launchIndex;
     uint8_t sleepIndex;
     uint8_t settingsIndex;
+
+    uint8_t menuMaxIndex = 4;
+    uint8_t dataMaxIndex = 0;
+    uint8_t launchMaxIndex = 0;
+    uint8_t sleepMaxIndex = 0;
+    uint8_t settingsMaxIndex = 0;
 };
 
 // Represents possible user inputs
@@ -88,10 +94,12 @@ class MainScreen {
     void clearDisplay();
     void showMenu();
     void showLaunch();
-    void resetDisplay();
+    void returnToMenu();
+    void refreshCurrentScreen();
     void updateLocalData(LocalData data);
     void updateRocketData(RocketData data);
     void receiveScreenInput(UserInput input);
+    void updateScreenPointer(uint8_t index, uint8_t prev_index = 255);
 };
 
 class AuxillaryScreen {

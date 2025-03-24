@@ -50,9 +50,32 @@ void MainScreen::showLaunch() {
     selectedScreen = LAUNCH;
 }
 
-void MainScreen::resetDisplay() {
+void MainScreen::returnToMenu() {
     clearDisplay();
     showMenu();
+}
+
+void MainScreen::refreshCurrentScreen() {
+    switch (selectedScreen) {
+        case MENU:
+            showMenu();
+            break;
+        case DATA:
+            showLaunch();
+            break;
+        case LAUNCH:
+            //TODO
+            break;
+        case SLEEP:
+            //TODO
+            break;
+        case SETTINGS:
+            //TODO
+            break;
+        default:
+            // Invalid screen
+            return;
+      }
 }
 
 void MainScreen::updateLocalData(LocalData data) {
@@ -69,23 +92,30 @@ void MainScreen::updateRocketData(RocketData data) {
 
 void MainScreen::receiveScreenInput(UserInput input) {
     uint8_t* selectedIndex = NULL;
+    uint8_t* maxIndex = NULL;
+    uint8_t prev_index = 255;
 
-    // Grab correct index
+    // Grab correct index to track
     switch (selectedScreen) {
         case MENU:
             selectedIndex = &screenSelectionIndexes.menuIndex;
+            maxIndex = &screenSelectionIndexes.menuMaxIndex;
             break;
         case DATA:
             selectedIndex = &screenSelectionIndexes.dataIndex;
+            maxIndex = &screenSelectionIndexes.dataMaxIndex;
             break;
         case LAUNCH:
             selectedIndex = &screenSelectionIndexes.launchIndex;
+            maxIndex = &screenSelectionIndexes.launchMaxIndex;
             break;
         case SLEEP:
             selectedIndex = &screenSelectionIndexes.sleepIndex;
+            maxIndex = &screenSelectionIndexes.sleepMaxIndex;
             break;
         case SETTINGS:
             selectedIndex = &screenSelectionIndexes.settingsIndex;
+            maxIndex = &screenSelectionIndexes.settingsMaxIndex;
             break;
         default:
             // Invalid screen
@@ -99,13 +129,17 @@ void MainScreen::receiveScreenInput(UserInput input) {
         case ENC_LEFT:
             // if encoder turned left, move up one menu option
             if (*selectedIndex > 0) {
+                prev_index = *selectedIndex;
                 *selectedIndex = *selectedIndex-1;
+                updateScreenPointer(*selectedIndex, prev_index);
             }
             break;
         case ENC_RIGHT:
             // if encoder turned right, move down one menu option
-            if (*selectedIndex < MAX_MENU_OPTIONS) {
+            if (*selectedIndex < *maxIndex) {
+                prev_index = *selectedIndex;
                 *selectedIndex = *selectedIndex+1;
+                updateScreenPointer(*selectedIndex, prev_index);
             }
             break;
         case ENC_PRESS:
@@ -126,8 +160,29 @@ void MainScreen::receiveScreenInput(UserInput input) {
       }
 
       Serial.print("Index after: "); Serial.println(*selectedIndex);
+      
 
-    Serial.println("Called receiveScreenInput");
+    Serial.println("Called receiveScreenInput\n");
+}
+
+void MainScreen::updateScreenPointer(uint8_t index, uint8_t prev_index) {
+    // If there was a prev_index passed, use that to remove 
+    // pointer rather the refreshing whole screen
+    if (prev_index != 255) {
+        display.setCursor(112,16*prev_index);
+        display.setTextColor(SH110X_BLACK);
+        display.println(F("<"));
+        display.display();
+    } else {
+        // Using this method causes the screen to flicker as it redraws
+        refreshCurrentScreen();
+    }
+
+    // Redraws pointer
+    display.setCursor(112,16*index);
+    display.setTextColor(SH110X_WHITE);
+    display.println(F("<"));
+    display.display();
 }
 
 

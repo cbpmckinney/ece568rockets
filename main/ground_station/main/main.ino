@@ -29,10 +29,21 @@ void initializeScreens() {
   mainScreen.initialize(0x3D);
   auxScreen.initialize(0x3C);
 
+  mainScreen.updateScreenPointer(0);
+  mainScreen.showMenu();
+
   //mainScreen.showMenu();
   mainScreen.receiveScreenInput(ENC_RIGHT);
+  delay(500);
   mainScreen.receiveScreenInput(ENC_RIGHT);
+  delay(500);
   mainScreen.receiveScreenInput(ENC_LEFT);
+  delay(500);
+  mainScreen.receiveScreenInput(ENC_RIGHT);
+  delay(500);
+  mainScreen.receiveScreenInput(ENC_RIGHT);
+  delay(500);
+  mainScreen.receiveScreenInput(ENC_RIGHT);
   Serial.print("Wrote!");
 
   delay(2000);
