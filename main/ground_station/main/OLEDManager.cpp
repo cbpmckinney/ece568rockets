@@ -19,6 +19,18 @@ Chris Silman
 void MainScreen::initialize(uint8_t i2caddr) {
     display.begin(i2caddr, true);
     clearDisplay();
+
+    // Set up menuOptions
+    menuOptions[0] = DATA;
+    menuOptions[1] = LAUNCH;
+    menuOptions[2] = SLEEP;
+    menuOptions[3] = SETTINGS;
+
+    Serial.print("MENU"); Serial.println(MENU);
+    Serial.print("DATA"); Serial.println(DATA);
+    Serial.print("LAUNCH"); Serial.println(LAUNCH);
+    Serial.print("SLEEP"); Serial.println(SLEEP);
+    Serial.print("SETTINGS"); Serial.println(SETTINGS);
 }
 
 void MainScreen::clearDisplay() {
@@ -40,14 +52,17 @@ void MainScreen::showMenu() {
     display.println(F("SETTINGS"));
     display.display();
 
-    selectedScreen = MENU;
+    currentScreen = MENU;
 }
 
 void MainScreen::showLaunch() {
     clearDisplay();
-    display.setTextSize(1);
+    display.setTextSize(2);
+    display.setTextColor(SH110X_WHITE);
+    display.println(F("ARM ROCKET?"));
+    display.display();
 
-    selectedScreen = LAUNCH;
+    currentScreen = LAUNCH;
 }
 
 void MainScreen::returnToMenu() {
@@ -56,14 +71,43 @@ void MainScreen::returnToMenu() {
 }
 
 void MainScreen::refreshCurrentScreen() {
-    switch (selectedScreen) {
+    clearDisplay();
+    switch (currentScreen) {
         case MENU:
             showMenu();
+            updateScreenPointer(screenSelectionIndexes.menuIndex, 0);
             break;
         case DATA:
             showLaunch();
             break;
         case LAUNCH:
+            //TODO
+            break;
+        case SLEEP:
+            //TODO
+            break;
+        case SETTINGS:
+            //TODO
+            break;
+        default:
+            // Invalid screen
+            return;
+      }
+}
+
+void MainScreen::jumpToScreen(Screen screen) {
+    Serial.print("In jump to screen, going to: "); Serial.println(screen);
+    switch (screen) {
+        case MENU:
+            Serial.println("MENU");
+            showMenu();
+            break;
+        case DATA:
+            Serial.println("DATA");
+            break;
+        case LAUNCH:
+            Serial.println("LAUNCH");
+            showLaunch();
             //TODO
             break;
         case SLEEP:
@@ -96,33 +140,36 @@ void MainScreen::receiveScreenInput(UserInput input) {
     uint8_t prev_index = 255;
 
     // Grab correct index to track
-    switch (selectedScreen) {
-        case MENU:
-            selectedIndex = &screenSelectionIndexes.menuIndex;
-            maxIndex = &screenSelectionIndexes.menuMaxIndex;
-            break;
-        case DATA:
-            selectedIndex = &screenSelectionIndexes.dataIndex;
-            maxIndex = &screenSelectionIndexes.dataMaxIndex;
-            break;
-        case LAUNCH:
-            selectedIndex = &screenSelectionIndexes.launchIndex;
-            maxIndex = &screenSelectionIndexes.launchMaxIndex;
-            break;
-        case SLEEP:
-            selectedIndex = &screenSelectionIndexes.sleepIndex;
-            maxIndex = &screenSelectionIndexes.sleepMaxIndex;
-            break;
-        case SETTINGS:
-            selectedIndex = &screenSelectionIndexes.settingsIndex;
-            maxIndex = &screenSelectionIndexes.settingsMaxIndex;
-            break;
-        default:
-            // Invalid screen
-            return;
-      }
+    if (input == ENC_LEFT or input == ENC_RIGHT or input == ENC_PRESS) {
+        switch (currentScreen) {
+            case MENU:
+                selectedIndex = &screenSelectionIndexes.menuIndex;
+                maxIndex = &screenSelectionIndexes.menuMaxIndex;
+                break;
+            case DATA:
+                selectedIndex = &screenSelectionIndexes.dataIndex;
+                maxIndex = &screenSelectionIndexes.dataMaxIndex;
+                break;
+            case LAUNCH:
+                selectedIndex = &screenSelectionIndexes.launchIndex;
+                maxIndex = &screenSelectionIndexes.launchMaxIndex;
+                break;
+            case SLEEP:
+                selectedIndex = &screenSelectionIndexes.sleepIndex;
+                maxIndex = &screenSelectionIndexes.sleepMaxIndex;
+                break;
+            case SETTINGS:
+                selectedIndex = &screenSelectionIndexes.settingsIndex;
+                maxIndex = &screenSelectionIndexes.settingsMaxIndex;
+                break;
+            default:
+                // Invalid screen
+                return;
+          }
+          Serial.print("Index before: "); Serial.println(*selectedIndex);
+    }
 
-      Serial.print("Index before: "); Serial.println(*selectedIndex);
+      
 
     // Command handling
     switch (input) {
@@ -132,6 +179,7 @@ void MainScreen::receiveScreenInput(UserInput input) {
                 prev_index = *selectedIndex;
                 *selectedIndex = *selectedIndex-1;
                 updateScreenPointer(*selectedIndex, prev_index);
+                Serial.print("Index after: "); Serial.println(*selectedIndex);
             }
             break;
         case ENC_RIGHT:
@@ -140,10 +188,14 @@ void MainScreen::receiveScreenInput(UserInput input) {
                 prev_index = *selectedIndex;
                 *selectedIndex = *selectedIndex+1;
                 updateScreenPointer(*selectedIndex, prev_index);
+                Serial.print("Index after: "); Serial.println(*selectedIndex);
             }
             break;
         case ENC_PRESS:
-            // statements
+            if (currentScreen == MENU) {
+                Serial.print("Jumping to: "); Serial.println(menuOptions[*selectedIndex]);
+                jumpToScreen(menuOptions[*selectedIndex]);
+            }
             break;
         case BIG_RED:
             // statements
@@ -158,10 +210,7 @@ void MainScreen::receiveScreenInput(UserInput input) {
             // Invalid input
             return;
       }
-
-      Serial.print("Index after: "); Serial.println(*selectedIndex);
       
-
     Serial.println("Called receiveScreenInput\n");
 }
 

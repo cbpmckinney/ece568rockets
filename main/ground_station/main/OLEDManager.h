@@ -48,13 +48,13 @@ struct RocketData {
 // Represents the index at which the user was last on for screens that
 // have the option to select items
 struct ScreenSelectionIndex {
-    uint8_t menuIndex;
-    uint8_t dataIndex;
-    uint8_t launchIndex;
-    uint8_t sleepIndex;
-    uint8_t settingsIndex;
+    uint8_t menuIndex = 0;
+    uint8_t dataIndex = 0;
+    uint8_t launchIndex = 0;
+    uint8_t sleepIndex = 0;
+    uint8_t settingsIndex = 0;
 
-    uint8_t menuMaxIndex = 4;
+    uint8_t menuMaxIndex = 3;
     uint8_t dataMaxIndex = 0;
     uint8_t launchMaxIndex = 0;
     uint8_t sleepMaxIndex = 0;
@@ -72,7 +72,7 @@ enum UserInput {
 };
 
 // Represents what screen the user is currently on
-enum SelectedScreen {
+enum Screen {
     MENU,
     DATA,
     LAUNCH,
@@ -84,10 +84,11 @@ class MainScreen {
   public:
     // CLASS DATA MEMBERS
     Adafruit_SH1107 display = Adafruit_SH1107(SCREEN_WIDTH, SCREEN_HEIGHT, &Wire, OLED_RESET, 1000000, 100000);
-    ScreenSelectionIndex screenSelectionIndexes = {0, 0};
-    SelectedScreen selectedScreen = MENU;
+    ScreenSelectionIndex screenSelectionIndexes;
+    Screen currentScreen = MENU;
     bool data_screen_enabled;
     bool rocket_armed;
+    Screen menuOptions[4];
 
     // CLASS METHODS
     void initialize(uint8_t i2caddr);
@@ -96,6 +97,7 @@ class MainScreen {
     void showLaunch();
     void returnToMenu();
     void refreshCurrentScreen();
+    void jumpToScreen(Screen screen);
     void updateLocalData(LocalData data);
     void updateRocketData(RocketData data);
     void receiveScreenInput(UserInput input);

@@ -44,6 +44,12 @@ void initializeScreens() {
   mainScreen.receiveScreenInput(ENC_RIGHT);
   delay(500);
   mainScreen.receiveScreenInput(ENC_RIGHT);
+  delay(500);
+  mainScreen.receiveScreenInput(ENC_LEFT);
+  delay(500);
+  mainScreen.receiveScreenInput(ENC_LEFT);
+  delay(500);
+  mainScreen.receiveScreenInput(ENC_PRESS);
   Serial.print("Wrote!");
 
   delay(2000);
