@@ -75,7 +75,7 @@ void MainScreen::refreshCurrentScreen() {
     switch (currentScreen) {
         case MENU:
             showMenu();
-            updateScreenPointer(screenSelectionIndexes.menuIndex, 0);
+            updateScreenPointer(screenCursorIndexes.menuIndex, 0);
             break;
         case DATA:
             showLaunch();
@@ -143,24 +143,24 @@ void MainScreen::receiveScreenInput(UserInput input) {
     if (input == ENC_LEFT or input == ENC_RIGHT or input == ENC_PRESS) {
         switch (currentScreen) {
             case MENU:
-                selectedIndex = &screenSelectionIndexes.menuIndex;
-                maxIndex = &screenSelectionIndexes.menuMaxIndex;
+                selectedIndex = &screenCursorIndexes.menuIndex;
+                maxIndex = &screenCursorIndexes.menuMaxIndex;
                 break;
             case DATA:
-                selectedIndex = &screenSelectionIndexes.dataIndex;
-                maxIndex = &screenSelectionIndexes.dataMaxIndex;
+                selectedIndex = &screenCursorIndexes.dataIndex;
+                maxIndex = &screenCursorIndexes.dataMaxIndex;
                 break;
             case LAUNCH:
-                selectedIndex = &screenSelectionIndexes.launchIndex;
-                maxIndex = &screenSelectionIndexes.launchMaxIndex;
+                selectedIndex = &screenCursorIndexes.launchIndex;
+                maxIndex = &screenCursorIndexes.launchMaxIndex;
                 break;
             case SLEEP:
-                selectedIndex = &screenSelectionIndexes.sleepIndex;
-                maxIndex = &screenSelectionIndexes.sleepMaxIndex;
+                selectedIndex = &screenCursorIndexes.sleepIndex;
+                maxIndex = &screenCursorIndexes.sleepMaxIndex;
                 break;
             case SETTINGS:
-                selectedIndex = &screenSelectionIndexes.settingsIndex;
-                maxIndex = &screenSelectionIndexes.settingsMaxIndex;
+                selectedIndex = &screenCursorIndexes.settingsIndex;
+                maxIndex = &screenCursorIndexes.settingsMaxIndex;
                 break;
             default:
                 // Invalid screen

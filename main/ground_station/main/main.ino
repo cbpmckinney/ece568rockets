@@ -44,7 +44,7 @@ void initializeScreens() {
   mainScreen.receiveScreenInput(ENC_RIGHT);
   delay(500);
   mainScreen.receiveScreenInput(ENC_RIGHT);
-  delay(500);
+  delay(500); 
   mainScreen.receiveScreenInput(ENC_LEFT);
   delay(500);
   mainScreen.receiveScreenInput(ENC_LEFT);

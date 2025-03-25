@@ -47,7 +47,7 @@ struct RocketData {
 
 // Represents the index at which the user was last on for screens that
 // have the option to select items
-struct ScreenSelectionIndex {
+struct ScreenCursorIndex {
     uint8_t menuIndex = 0;
     uint8_t dataIndex = 0;
     uint8_t launchIndex = 0;
@@ -84,7 +84,7 @@ class MainScreen {
   public:
     // CLASS DATA MEMBERS
     Adafruit_SH1107 display = Adafruit_SH1107(SCREEN_WIDTH, SCREEN_HEIGHT, &Wire, OLED_RESET, 1000000, 100000);
-    ScreenSelectionIndex screenSelectionIndexes;
+    ScreenCursorIndex screenSelectionIndexes;
     Screen currentScreen = MENU;
     bool data_screen_enabled;
     bool rocket_armed;
