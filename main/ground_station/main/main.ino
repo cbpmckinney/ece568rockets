@@ -29,7 +29,7 @@ void initializeScreens() {
   mainScreen.initialize(0x3D);
   auxScreen.initialize(0x3C);
 
-  mainScreen.updateScreenPointer(0);
+  mainScreen.updateScreenPointerVert(0);
   mainScreen.showMenu();
 
   //mainScreen.showMenu();
@@ -48,6 +48,14 @@ void initializeScreens() {
   mainScreen.receiveScreenInput(ENC_LEFT);
   delay(500);
   mainScreen.receiveScreenInput(ENC_LEFT);
+  delay(500);
+  mainScreen.receiveScreenInput(ENC_PRESS);
+  delay(500);
+  mainScreen.receiveScreenInput(ENC_PRESS);
+  delay(500);
+  mainScreen.receiveScreenInput(ENC_PRESS);
+  delay(500);
+  mainScreen.receiveScreenInput(ENC_RIGHT);
   delay(500);
   mainScreen.receiveScreenInput(ENC_PRESS);
   Serial.print("Wrote!");

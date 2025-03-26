@@ -54,9 +54,10 @@ struct ScreenCursorIndex {
     uint8_t sleepIndex = 0;
     uint8_t settingsIndex = 0;
 
+    // Includes 0; 3 = 0, 1, 2, 3
     uint8_t menuMaxIndex = 3;
     uint8_t dataMaxIndex = 0;
-    uint8_t launchMaxIndex = 0;
+    uint8_t launchMaxIndex = 1;
     uint8_t sleepMaxIndex = 0;
     uint8_t settingsMaxIndex = 0;
 };
@@ -76,6 +77,9 @@ enum Screen {
     MENU,
     DATA,
     LAUNCH,
+    LAUNCH_WAIT,
+    LAUNCH_SEQ,
+    LAUNCH_BIG_RED,
     SLEEP,
     SETTINGS
 };
@@ -84,13 +88,15 @@ class MainScreen {
   public:
     // CLASS DATA MEMBERS
     Adafruit_SH1107 display = Adafruit_SH1107(SCREEN_WIDTH, SCREEN_HEIGHT, &Wire, OLED_RESET, 1000000, 100000);
-    ScreenCursorIndex screenSelectionIndexes;
+    ScreenCursorIndex screenCursorIndexes;
     Screen currentScreen = MENU;
     bool data_screen_enabled;
     bool rocket_armed;
     Screen menuOptions[4];
+    Screen launchOptions[2];
 
     // CLASS METHODS
+    void drawCentreString(const char *buf, int x, int y);
     void initialize(uint8_t i2caddr);
     void clearDisplay();
     void showMenu();
@@ -101,7 +107,8 @@ class MainScreen {
     void updateLocalData(LocalData data);
     void updateRocketData(RocketData data);
     void receiveScreenInput(UserInput input);
-    void updateScreenPointer(uint8_t index, uint8_t prev_index = 255);
+    void updateScreenPointerVert(uint8_t index, uint8_t prev_index=255);
+    void updateScreenPointerHorz(uint8_t x_index, uint8_t y_index, uint8_t prev_x_index=255, uint8_t prev_y_index=255);
 };
 
 class AuxillaryScreen {

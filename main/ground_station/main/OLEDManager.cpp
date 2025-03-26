@@ -14,6 +14,19 @@ Chris Silman
 #include "Arduino.h"
 
 /************************************
+* Helper Functions
+*************************************/
+
+void MainScreen::drawCentreString(const char *buf, int x, int y)
+{
+    int16_t x1, y1;
+    uint16_t w, h;
+    display.getTextBounds(buf, x, y, &x1, &y1, &w, &h); //calc width of new string
+    display.setCursor(x - w / 2, y);
+    display.print(buf);
+}
+
+/************************************
 * Main Screen
 *************************************/
 void MainScreen::initialize(uint8_t i2caddr) {
@@ -25,6 +38,10 @@ void MainScreen::initialize(uint8_t i2caddr) {
     menuOptions[1] = LAUNCH;
     menuOptions[2] = SLEEP;
     menuOptions[3] = SETTINGS;
+
+    // Set up launchOptions
+    launchOptions[0] = LAUNCH_WAIT; // Y
+    launchOptions[1] = MENU; // N
 
     Serial.print("MENU"); Serial.println(MENU);
     Serial.print("DATA"); Serial.println(DATA);
@@ -39,6 +56,8 @@ void MainScreen::clearDisplay() {
 }
 
 void MainScreen::showMenu() {
+    currentScreen = MENU;
+
     clearDisplay();
     display.setTextSize(2);
     display.setTextColor(SH110X_WHITE);
@@ -51,18 +70,21 @@ void MainScreen::showMenu() {
     display.setCursor(0,48);
     display.println(F("SETTINGS"));
     display.display();
-
-    currentScreen = MENU;
 }
 
 void MainScreen::showLaunch() {
+    currentScreen = LAUNCH;
+
     clearDisplay();
     display.setTextSize(2);
     display.setTextColor(SH110X_WHITE);
-    display.println(F("ARM ROCKET?"));
+    drawCentreString("PRIME", 64, 0);
+    drawCentreString("ROCKET?", 88, 16);
+    display.setCursor(32,64);
+    display.println(F("Y"));
+    display.setCursor(80,64);
+    display.println(F("N"));
     display.display();
-
-    currentScreen = LAUNCH;
 }
 
 void MainScreen::returnToMenu() {
@@ -75,13 +97,13 @@ void MainScreen::refreshCurrentScreen() {
     switch (currentScreen) {
         case MENU:
             showMenu();
-            updateScreenPointer(screenCursorIndexes.menuIndex, 0);
+            updateScreenPointerVert(screenCursorIndexes.menuIndex, 0);
             break;
         case DATA:
-            showLaunch();
+            //TODO
             break;
         case LAUNCH:
-            //TODO
+            showLaunch();
             break;
         case SLEEP:
             //TODO
@@ -118,6 +140,8 @@ void MainScreen::jumpToScreen(Screen screen) {
             break;
         default:
             // Invalid screen
+            Serial.println("No valid screen! Going to main");
+            showMenu();
             return;
       }
 }
@@ -178,7 +202,7 @@ void MainScreen::receiveScreenInput(UserInput input) {
             if (*selectedIndex > 0) {
                 prev_index = *selectedIndex;
                 *selectedIndex = *selectedIndex-1;
-                updateScreenPointer(*selectedIndex, prev_index);
+                updateScreenPointerVert(*selectedIndex, prev_index);
                 Serial.print("Index after: "); Serial.println(*selectedIndex);
             }
             break;
@@ -187,7 +211,7 @@ void MainScreen::receiveScreenInput(UserInput input) {
             if (*selectedIndex < *maxIndex) {
                 prev_index = *selectedIndex;
                 *selectedIndex = *selectedIndex+1;
-                updateScreenPointer(*selectedIndex, prev_index);
+                updateScreenPointerVert(*selectedIndex, prev_index);
                 Serial.print("Index after: "); Serial.println(*selectedIndex);
             }
             break;
@@ -195,6 +219,9 @@ void MainScreen::receiveScreenInput(UserInput input) {
             if (currentScreen == MENU) {
                 Serial.print("Jumping to: "); Serial.println(menuOptions[*selectedIndex]);
                 jumpToScreen(menuOptions[*selectedIndex]);
+            } else if (currentScreen == LAUNCH) {
+                Serial.print("Jumping to: "); Serial.println(launchOptions[*selectedIndex]);
+                jumpToScreen(launchOptions[*selectedIndex]);
             }
             break;
         case BIG_RED:
@@ -214,7 +241,7 @@ void MainScreen::receiveScreenInput(UserInput input) {
     Serial.println("Called receiveScreenInput\n");
 }
 
-void MainScreen::updateScreenPointer(uint8_t index, uint8_t prev_index) {
+void MainScreen::updateScreenPointerVert(uint8_t index, uint8_t prev_index) {
     // If there was a prev_index passed, use that to remove 
     // pointer rather the refreshing whole screen
     if (prev_index != 255) {
@@ -234,6 +261,25 @@ void MainScreen::updateScreenPointer(uint8_t index, uint8_t prev_index) {
     display.display();
 }
 
+void MainScreen::updateScreenPointerHorz(uint8_t x_index, uint8_t y_index, uint8_t prev_x_index, uint8_t prev_y_index) {
+    // If there was a prev_index passed, use that to remove 
+    // pointer rather the refreshing whole screen
+    if (prev_x_index != 255 && prev_y_index != 255) {
+        display.setCursor(16*prev_x_index,16*prev_x_index);
+        display.setTextColor(SH110X_BLACK);
+        display.println(F("<"));
+        display.display();
+    } else {
+        // Using this method causes the screen to flicker as it redraws
+        refreshCurrentScreen();
+    }
+
+    // Redraws pointer
+    display.setCursor(16*x_index,16*y_index);
+    display.setTextColor(SH110X_WHITE);
+    display.println(F("<"));
+    display.display();
+}
 
 /************************************
 * Auxillary Screen
