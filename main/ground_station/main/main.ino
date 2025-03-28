@@ -28,8 +28,7 @@ void initializeScreens() {
 
   mainScreen.initialize(0x3D);
   auxScreen.initialize(0x3C);
-
-  mainScreen.updateScreenPointerVert(0);
+  
   mainScreen.showMenu();
 
   //mainScreen.showMenu();

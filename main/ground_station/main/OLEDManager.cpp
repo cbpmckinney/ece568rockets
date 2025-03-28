@@ -34,14 +34,14 @@ void MainScreen::initialize(uint8_t i2caddr) {
     clearDisplay();
 
     // Set up menuOptions
-    menuOptions[0] = DATA;
-    menuOptions[1] = LAUNCH;
-    menuOptions[2] = SLEEP;
-    menuOptions[3] = SETTINGS;
+    menuOptions[0] = {DATA, 7, 0};
+    menuOptions[1] = {LAUNCH, 7, 1};
+    menuOptions[2] = {SLEEP, 7, 2};
+    menuOptions[3] = {SETTINGS, 7, 3};
 
     // Set up launchOptions
-    launchOptions[0] = LAUNCH_WAIT; // Y
-    launchOptions[1] = MENU; // N
+    launchOptions[0] = {LAUNCH_WAIT, 3, 4}; //Y
+    launchOptions[1] = {MENU, 6, 4}; //N
 
     Serial.print("MENU"); Serial.println(MENU);
     Serial.print("DATA"); Serial.println(DATA);
@@ -69,6 +69,8 @@ void MainScreen::showMenu() {
     display.println(F("SLEEP"));
     display.setCursor(0,48);
     display.println(F("SETTINGS"));
+    updateScreenPointer(menuOptions[screenCursorIndexes.menuIndex].cursor_x_index, 
+                        menuOptions[screenCursorIndexes.menuIndex].cursor_y_index);
     display.display();
 }
 
@@ -84,6 +86,8 @@ void MainScreen::showLaunch() {
     display.println(F("Y"));
     display.setCursor(80,64);
     display.println(F("N"));
+    updateScreenPointer(launchOptions[screenCursorIndexes.launchIndex].cursor_x_index, 
+                        launchOptions[screenCursorIndexes.launchIndex].cursor_y_index);
     display.display();
 }
 
@@ -97,7 +101,6 @@ void MainScreen::refreshCurrentScreen() {
     switch (currentScreen) {
         case MENU:
             showMenu();
-            updateScreenPointerVert(screenCursorIndexes.menuIndex, 0);
             break;
         case DATA:
             //TODO
@@ -159,69 +162,77 @@ void MainScreen::updateRocketData(RocketData data) {
 }
 
 void MainScreen::receiveScreenInput(UserInput input) {
-    uint8_t* selectedIndex = NULL;
-    uint8_t* maxIndex = NULL;
+    uint8_t* cursorIndex = NULL;
+    uint8_t* maxScreenIndex = NULL;
+    ScreenNavInfo* screenNavInfo = NULL;
     uint8_t prev_index = 255;
+    uint8_t prev_x_index = 255;
+    uint8_t prev_y_index = 255;
 
     // Grab correct index to track
     if (input == ENC_LEFT or input == ENC_RIGHT or input == ENC_PRESS) {
         switch (currentScreen) {
             case MENU:
-                selectedIndex = &screenCursorIndexes.menuIndex;
-                maxIndex = &screenCursorIndexes.menuMaxIndex;
+                cursorIndex = &screenCursorIndexes.menuIndex;
+                maxScreenIndex = &screenCursorIndexes.menuMaxIndex;
+                screenNavInfo = menuOptions;
                 break;
             case DATA:
-                selectedIndex = &screenCursorIndexes.dataIndex;
-                maxIndex = &screenCursorIndexes.dataMaxIndex;
+                cursorIndex = &screenCursorIndexes.dataIndex;
+                maxScreenIndex = &screenCursorIndexes.dataMaxIndex;
                 break;
             case LAUNCH:
-                selectedIndex = &screenCursorIndexes.launchIndex;
-                maxIndex = &screenCursorIndexes.launchMaxIndex;
+                cursorIndex = &screenCursorIndexes.launchIndex;
+                maxScreenIndex = &screenCursorIndexes.launchMaxIndex;
+                screenNavInfo = launchOptions;
                 break;
             case SLEEP:
-                selectedIndex = &screenCursorIndexes.sleepIndex;
-                maxIndex = &screenCursorIndexes.sleepMaxIndex;
+                cursorIndex = &screenCursorIndexes.sleepIndex;
+                maxScreenIndex = &screenCursorIndexes.sleepMaxIndex;
                 break;
             case SETTINGS:
-                selectedIndex = &screenCursorIndexes.settingsIndex;
-                maxIndex = &screenCursorIndexes.settingsMaxIndex;
+                cursorIndex = &screenCursorIndexes.settingsIndex;
+                maxScreenIndex = &screenCursorIndexes.settingsMaxIndex;
                 break;
             default:
                 // Invalid screen
                 return;
           }
-          Serial.print("Index before: "); Serial.println(*selectedIndex);
+          Serial.print("Index before: "); Serial.println(*cursorIndex);
     }
-
-      
 
     // Command handling
     switch (input) {
         case ENC_LEFT:
             // if encoder turned left, move up one menu option
-            if (*selectedIndex > 0) {
-                prev_index = *selectedIndex;
-                *selectedIndex = *selectedIndex-1;
-                updateScreenPointerVert(*selectedIndex, prev_index);
-                Serial.print("Index after: "); Serial.println(*selectedIndex);
+            if (*cursorIndex > 0) {
+                prev_x_index = screenNavInfo[*cursorIndex].cursor_x_index;
+                prev_y_index = screenNavInfo[*cursorIndex].cursor_y_index;
+                *cursorIndex = *cursorIndex-1;
+                updateScreenPointer(screenNavInfo[*cursorIndex].cursor_x_index, 
+                                        screenNavInfo[*cursorIndex].cursor_y_index, 
+                                        prev_x_index, 
+                                        prev_y_index);
+                Serial.print("Index after: "); Serial.println(*cursorIndex);
             }
             break;
         case ENC_RIGHT:
             // if encoder turned right, move down one menu option
-            if (*selectedIndex < *maxIndex) {
-                prev_index = *selectedIndex;
-                *selectedIndex = *selectedIndex+1;
-                updateScreenPointerVert(*selectedIndex, prev_index);
-                Serial.print("Index after: "); Serial.println(*selectedIndex);
+            if (*cursorIndex < *maxScreenIndex) {
+                prev_x_index = screenNavInfo[*cursorIndex].cursor_x_index;
+                prev_y_index = screenNavInfo[*cursorIndex].cursor_y_index;
+                *cursorIndex = *cursorIndex+1;
+                updateScreenPointer(screenNavInfo[*cursorIndex].cursor_x_index, 
+                                        screenNavInfo[*cursorIndex].cursor_y_index, 
+                                        prev_x_index, 
+                                        prev_y_index);
+                Serial.print("Index after: "); Serial.println(*cursorIndex);
             }
             break;
         case ENC_PRESS:
-            if (currentScreen == MENU) {
-                Serial.print("Jumping to: "); Serial.println(menuOptions[*selectedIndex]);
-                jumpToScreen(menuOptions[*selectedIndex]);
-            } else if (currentScreen == LAUNCH) {
-                Serial.print("Jumping to: "); Serial.println(launchOptions[*selectedIndex]);
-                jumpToScreen(launchOptions[*selectedIndex]);
+            if (currentScreen == MENU || currentScreen == LAUNCH) {
+                Serial.print("Jumping to: "); Serial.println(screenNavInfo[*cursorIndex].nextScreen);
+                jumpToScreen(screenNavInfo[*cursorIndex].nextScreen);
             }
             break;
         case BIG_RED:
@@ -241,38 +252,18 @@ void MainScreen::receiveScreenInput(UserInput input) {
     Serial.println("Called receiveScreenInput\n");
 }
 
-void MainScreen::updateScreenPointerVert(uint8_t index, uint8_t prev_index) {
-    // If there was a prev_index passed, use that to remove 
-    // pointer rather the refreshing whole screen
-    if (prev_index != 255) {
-        display.setCursor(112,16*prev_index);
-        display.setTextColor(SH110X_BLACK);
-        display.println(F("<"));
-        display.display();
-    } else {
-        // Using this method causes the screen to flicker as it redraws
-        refreshCurrentScreen();
-    }
-
-    // Redraws pointer
-    display.setCursor(112,16*index);
-    display.setTextColor(SH110X_WHITE);
-    display.println(F("<"));
-    display.display();
-}
-
-void MainScreen::updateScreenPointerHorz(uint8_t x_index, uint8_t y_index, uint8_t prev_x_index, uint8_t prev_y_index) {
+void MainScreen::updateScreenPointer(uint8_t x_index, uint8_t y_index, uint8_t prev_x_index, uint8_t prev_y_index) {
     // If there was a prev_index passed, use that to remove 
     // pointer rather the refreshing whole screen
     if (prev_x_index != 255 && prev_y_index != 255) {
-        display.setCursor(16*prev_x_index,16*prev_x_index);
+        Serial.print("Removing previous cursor at:"); Serial.print(prev_x_index); Serial.println(prev_y_index);
+        display.setCursor(16*prev_x_index,16*prev_y_index);
         display.setTextColor(SH110X_BLACK);
         display.println(F("<"));
         display.display();
-    } else {
-        // Using this method causes the screen to flicker as it redraws
-        refreshCurrentScreen();
     }
+
+    Serial.print("Addng new cursor at:"); Serial.print(x_index); Serial.println(y_index);
 
     // Redraws pointer
     display.setCursor(16*x_index,16*y_index);

@@ -20,6 +20,28 @@ Chris Silman
 #include <Arduino.h>
 #include <memory>
 
+// Represents possible user inputs
+enum UserInput {
+    ENC_LEFT,
+    ENC_RIGHT,
+    ENC_PRESS,
+    BIG_RED,
+    KEY_ON,
+    KEY_OFF
+};
+
+// Represents what screen the user is currently on
+enum Screen {
+    MENU,
+    DATA,
+    LAUNCH,
+    LAUNCH_WAIT,
+    LAUNCH_SEQ,
+    LAUNCH_BIG_RED,
+    SLEEP,
+    SETTINGS
+};
+
 // Expected structure of local data
 struct LocalData {
     int temp;
@@ -62,26 +84,10 @@ struct ScreenCursorIndex {
     uint8_t settingsMaxIndex = 0;
 };
 
-// Represents possible user inputs
-enum UserInput {
-    ENC_LEFT,
-    ENC_RIGHT,
-    ENC_PRESS,
-    BIG_RED,
-    KEY_ON,
-    KEY_OFF
-};
-
-// Represents what screen the user is currently on
-enum Screen {
-    MENU,
-    DATA,
-    LAUNCH,
-    LAUNCH_WAIT,
-    LAUNCH_SEQ,
-    LAUNCH_BIG_RED,
-    SLEEP,
-    SETTINGS
+struct ScreenNavInfo {
+    Screen nextScreen;
+    uint8_t cursor_x_index;
+    uint8_t cursor_y_index;
 };
 
 class MainScreen {
@@ -92,8 +98,8 @@ class MainScreen {
     Screen currentScreen = MENU;
     bool data_screen_enabled;
     bool rocket_armed;
-    Screen menuOptions[4];
-    Screen launchOptions[2];
+    ScreenNavInfo menuOptions[4];
+    ScreenNavInfo launchOptions[2];
 
     // CLASS METHODS
     void drawCentreString(const char *buf, int x, int y);
@@ -107,8 +113,7 @@ class MainScreen {
     void updateLocalData(LocalData data);
     void updateRocketData(RocketData data);
     void receiveScreenInput(UserInput input);
-    void updateScreenPointerVert(uint8_t index, uint8_t prev_index=255);
-    void updateScreenPointerHorz(uint8_t x_index, uint8_t y_index, uint8_t prev_x_index=255, uint8_t prev_y_index=255);
+    void updateScreenPointer(uint8_t x_index, uint8_t y_index, uint8_t prev_x_index=255, uint8_t prev_y_index=255);
 };
 
 class AuxillaryScreen {
