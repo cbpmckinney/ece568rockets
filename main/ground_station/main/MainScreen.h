@@ -1,14 +1,13 @@
 /*********************************************************************
-OLED Screen Header File
-    This file is a bit atypical of a standard header file, however, it
-    declares all the classes, members, and methods of the OLED screens.
+Main Screen Header File
+    Declares the Main Screen class, its members, and methods.
 
 Written by:
 Chris Silman
 *********************************************************************/
 
-#ifndef _OLEDManager_
-#define _OLEDManager_ 
+#ifndef _MainScreen_
+#define _MainScreen_ 
 
 #define SCREEN_WIDTH 128  // OLED display width, in pixels
 #define SCREEN_HEIGHT 128 // OLED display height, in pixels
@@ -107,21 +106,11 @@ class MainScreen {
     void clearDisplay();
     void showMenu();
     void showLaunch();
-    void returnToMenu();
-    void refreshCurrentScreen();
     void jumpToScreen(Screen screen);
     void updateLocalData(LocalData data);
     void updateRocketData(RocketData data);
     void receiveScreenInput(UserInput input);
-    void updateScreenPointer(uint8_t x_index, uint8_t y_index, uint8_t prev_x_index=255, uint8_t prev_y_index=255);
+    void updateScreenCursor(uint8_t x_index, uint8_t y_index, uint8_t prev_x_index=255, uint8_t prev_y_index=255);
 };
 
-class AuxillaryScreen {
-  public:
-    Adafruit_SH1107 display = Adafruit_SH1107(SCREEN_WIDTH, SCREEN_HEIGHT, &Wire, OLED_RESET, 1000000, 100000);
-    void initialize(uint8_t i2caddr);
-    void clearDisplay();
-};
-
-
-#endif // _OLEDManager_
+#endif // _MainScreen_

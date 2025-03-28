@@ -1,16 +1,15 @@
 /*********************************************************************
-OLED Screen Implementation File
-    Here is where you define all the methods that were declares in the
+Main Screen Implementation File
+    Here is where you define all the methods that were declared in the
     header file.
 
-    Since the header file contains two difference classes, the scope
-    operator (::) distinguishes which methods belong to which class.
+    The scope operator (::) distinguishes the class the method is for.
 
 Written by:
 Chris Silman
 *********************************************************************/
 
-#include "OLEDManager.h"
+#include "MainScreen.h"
 #include "Arduino.h"
 
 /************************************
@@ -42,12 +41,6 @@ void MainScreen::initialize(uint8_t i2caddr) {
     // Set up launchOptions
     launchOptions[0] = {LAUNCH_WAIT, 3, 4}; //Y
     launchOptions[1] = {MENU, 6, 4}; //N
-
-    Serial.print("MENU"); Serial.println(MENU);
-    Serial.print("DATA"); Serial.println(DATA);
-    Serial.print("LAUNCH"); Serial.println(LAUNCH);
-    Serial.print("SLEEP"); Serial.println(SLEEP);
-    Serial.print("SETTINGS"); Serial.println(SETTINGS);
 }
 
 void MainScreen::clearDisplay() {
@@ -69,7 +62,7 @@ void MainScreen::showMenu() {
     display.println(F("SLEEP"));
     display.setCursor(0,48);
     display.println(F("SETTINGS"));
-    updateScreenPointer(menuOptions[screenCursorIndexes.menuIndex].cursor_x_index, 
+    updateScreenCursor(menuOptions[screenCursorIndexes.menuIndex].cursor_x_index, 
                         menuOptions[screenCursorIndexes.menuIndex].cursor_y_index);
     display.display();
 }
@@ -86,52 +79,23 @@ void MainScreen::showLaunch() {
     display.println(F("Y"));
     display.setCursor(80,64);
     display.println(F("N"));
-    updateScreenPointer(launchOptions[screenCursorIndexes.launchIndex].cursor_x_index, 
+    updateScreenCursor(launchOptions[screenCursorIndexes.launchIndex].cursor_x_index, 
                         launchOptions[screenCursorIndexes.launchIndex].cursor_y_index);
     display.display();
-}
-
-void MainScreen::returnToMenu() {
-    clearDisplay();
-    showMenu();
-}
-
-void MainScreen::refreshCurrentScreen() {
-    clearDisplay();
-    switch (currentScreen) {
-        case MENU:
-            showMenu();
-            break;
-        case DATA:
-            //TODO
-            break;
-        case LAUNCH:
-            showLaunch();
-            break;
-        case SLEEP:
-            //TODO
-            break;
-        case SETTINGS:
-            //TODO
-            break;
-        default:
-            // Invalid screen
-            return;
-      }
 }
 
 void MainScreen::jumpToScreen(Screen screen) {
     Serial.print("In jump to screen, going to: "); Serial.println(screen);
     switch (screen) {
         case MENU:
-            Serial.println("MENU");
+            Serial.println("Jumpted to MENU");
             showMenu();
             break;
         case DATA:
-            Serial.println("DATA");
+            Serial.println("Jumpted to DATA");
             break;
         case LAUNCH:
-            Serial.println("LAUNCH");
+            Serial.println("Jumpted to LAUNCH");
             showLaunch();
             //TODO
             break;
@@ -165,11 +129,10 @@ void MainScreen::receiveScreenInput(UserInput input) {
     uint8_t* cursorIndex = NULL;
     uint8_t* maxScreenIndex = NULL;
     ScreenNavInfo* screenNavInfo = NULL;
-    uint8_t prev_index = 255;
     uint8_t prev_x_index = 255;
     uint8_t prev_y_index = 255;
 
-    // Grab correct index to track
+    // Grab information related to current screen.
     if (input == ENC_LEFT or input == ENC_RIGHT or input == ENC_PRESS) {
         switch (currentScreen) {
             case MENU:
@@ -204,29 +167,27 @@ void MainScreen::receiveScreenInput(UserInput input) {
     // Command handling
     switch (input) {
         case ENC_LEFT:
-            // if encoder turned left, move up one menu option
+            // if encoder turned left, decrement index by one and update cursor location
             if (*cursorIndex > 0) {
                 prev_x_index = screenNavInfo[*cursorIndex].cursor_x_index;
                 prev_y_index = screenNavInfo[*cursorIndex].cursor_y_index;
                 *cursorIndex = *cursorIndex-1;
-                updateScreenPointer(screenNavInfo[*cursorIndex].cursor_x_index, 
+                updateScreenCursor(screenNavInfo[*cursorIndex].cursor_x_index, 
                                         screenNavInfo[*cursorIndex].cursor_y_index, 
                                         prev_x_index, 
                                         prev_y_index);
-                Serial.print("Index after: "); Serial.println(*cursorIndex);
             }
             break;
         case ENC_RIGHT:
-            // if encoder turned right, move down one menu option
+            // if encoder turned right, increment index by one and update cursor location
             if (*cursorIndex < *maxScreenIndex) {
                 prev_x_index = screenNavInfo[*cursorIndex].cursor_x_index;
                 prev_y_index = screenNavInfo[*cursorIndex].cursor_y_index;
                 *cursorIndex = *cursorIndex+1;
-                updateScreenPointer(screenNavInfo[*cursorIndex].cursor_x_index, 
+                updateScreenCursor(screenNavInfo[*cursorIndex].cursor_x_index, 
                                         screenNavInfo[*cursorIndex].cursor_y_index, 
                                         prev_x_index, 
                                         prev_y_index);
-                Serial.print("Index after: "); Serial.println(*cursorIndex);
             }
             break;
         case ENC_PRESS:
@@ -252,36 +213,19 @@ void MainScreen::receiveScreenInput(UserInput input) {
     Serial.println("Called receiveScreenInput\n");
 }
 
-void MainScreen::updateScreenPointer(uint8_t x_index, uint8_t y_index, uint8_t prev_x_index, uint8_t prev_y_index) {
-    // If there was a prev_index passed, use that to remove 
-    // pointer rather the refreshing whole screen
+void MainScreen::updateScreenCursor(uint8_t x_index, uint8_t y_index, uint8_t prev_x_index, uint8_t prev_y_index) {
+    // If there were previous indices passed, use those to remove 
+    // the old cursor
     if (prev_x_index != 255 && prev_y_index != 255) {
-        Serial.print("Removing previous cursor at:"); Serial.print(prev_x_index); Serial.println(prev_y_index);
         display.setCursor(16*prev_x_index,16*prev_y_index);
         display.setTextColor(SH110X_BLACK);
         display.println(F("<"));
         display.display();
     }
 
-    Serial.print("Addng new cursor at:"); Serial.print(x_index); Serial.println(y_index);
-
-    // Redraws pointer
+    // Redraws cursor
     display.setCursor(16*x_index,16*y_index);
     display.setTextColor(SH110X_WHITE);
     display.println(F("<"));
-    display.display();
-}
-
-/************************************
-* Auxillary Screen
-*************************************/
-
-void AuxillaryScreen::initialize(uint8_t i2caddr) {
-    display.begin(i2caddr, true);
-    clearDisplay();
-}
-
-void AuxillaryScreen::clearDisplay() {
-    display.clearDisplay();
     display.display();
 }

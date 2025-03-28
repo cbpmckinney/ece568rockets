@@ -8,7 +8,8 @@ William Li
 *********************************************************************/
 
 #include <Adafruit_SH110X.h>
-#include "OLEDManager.h"
+#include "MainScreen.h"
+#include "AuxillaryScreen.h"
 
 MainScreen mainScreen = MainScreen();
 AuxillaryScreen auxScreen = AuxillaryScreen();
@@ -28,7 +29,7 @@ void initializeScreens() {
 
   mainScreen.initialize(0x3D);
   auxScreen.initialize(0x3C);
-  
+
   mainScreen.showMenu();
 
   //mainScreen.showMenu();
@@ -57,7 +58,10 @@ void initializeScreens() {
   mainScreen.receiveScreenInput(ENC_RIGHT);
   delay(500);
   mainScreen.receiveScreenInput(ENC_PRESS);
+  delay(500);
   Serial.print("Wrote!");
+
+  mainScreen.clearDisplay();
 
   delay(2000);
 }
