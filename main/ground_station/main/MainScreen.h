@@ -19,7 +19,7 @@ Chris Silman
 #include <Arduino.h>
 #include <memory>
 
-// Represents possible user inputs
+// Enum that defines all possible user inputs
 enum UserInput {
     ENC_LEFT,
     ENC_RIGHT,
@@ -29,7 +29,7 @@ enum UserInput {
     KEY_OFF
 };
 
-// Represents what screen the user is currently on
+// Enum that defines all possible screens
 enum Screen {
     MENU,
     DATA,
@@ -83,6 +83,8 @@ struct ScreenCursorIndex {
     uint8_t settingsMaxIndex = 0;
 };
 
+// Stores navigation information for moving the cursor and jumping
+// to another screen
 struct ScreenNavInfo {
     Screen nextScreen;
     uint8_t cursor_x_index;
@@ -90,27 +92,30 @@ struct ScreenNavInfo {
 };
 
 class MainScreen {
-  public:
-    // CLASS DATA MEMBERS
-    Adafruit_SH1107 display = Adafruit_SH1107(SCREEN_WIDTH, SCREEN_HEIGHT, &Wire, OLED_RESET, 1000000, 100000);
-    ScreenCursorIndex screenCursorIndexes;
-    Screen currentScreen = MENU;
-    bool data_screen_enabled;
-    bool rocket_armed;
-    ScreenNavInfo menuOptions[4];
-    ScreenNavInfo launchOptions[2];
+    private:
+        // HELPER METHODS
+        void drawCentreString(const char *buf, int x, int y);
 
-    // CLASS METHODS
-    void drawCentreString(const char *buf, int x, int y);
-    void initialize(uint8_t i2caddr);
-    void clearDisplay();
-    void showMenu();
-    void showLaunch();
-    void jumpToScreen(Screen screen);
-    void updateLocalData(LocalData data);
-    void updateRocketData(RocketData data);
-    void receiveScreenInput(UserInput input);
-    void updateScreenCursor(uint8_t x_index, uint8_t y_index, uint8_t prev_x_index=255, uint8_t prev_y_index=255);
+    public:
+        // CLASS DATA MEMBERS
+        Adafruit_SH1107 display = Adafruit_SH1107(SCREEN_WIDTH, SCREEN_HEIGHT, &Wire, OLED_RESET, 1000000, 100000);
+        ScreenCursorIndex screenCursorIndexes;
+        Screen currentScreen = MENU;
+        bool data_screen_enabled;
+        bool rocket_armed;
+        ScreenNavInfo menuOptions[4];
+        ScreenNavInfo launchOptions[2];
+
+        // CLASS METHODS
+        void initialize(uint8_t i2caddr);
+        void clearDisplay();
+        void showMenu();
+        void showLaunch();
+        void jumpToScreen(Screen screen);
+        void updateLocalData(LocalData data);
+        void updateRocketData(RocketData data);
+        void receiveScreenInput(UserInput input);
+        void updateScreenCursor(uint8_t x_index, uint8_t y_index, uint8_t prev_x_index=255, uint8_t prev_y_index=255);
 };
 
 #endif // _MainScreen_
