@@ -39,8 +39,11 @@ void MainScreen::initialize(uint8_t i2caddr) {
     menuOptions[3] = {SETTINGS, 7, 3};
 
     // Set up launchOptions
-    launchOptions[0] = {LAUNCH_WAIT, 3, 4}; //Y
-    launchOptions[1] = {MENU, 6, 4}; //N
+    launchOptions[0] = {LAUNCH_WAIT, 3, 4}; // Y
+    launchOptions[1] = {MENU, 6, 4}; // N
+
+    // Set up launchWaitOptions
+    launchWaitOptions[0] = {MENU, 5, 6}; // MENU
 }
 
 void MainScreen::clearDisplay() {
@@ -84,20 +87,38 @@ void MainScreen::showLaunch() {
     display.display();
 }
 
+void MainScreen::showLaunchWait() {
+    currentScreen = LAUNCH_WAIT;
+
+    clearDisplay();
+    display.setTextSize(2);
+    display.setTextColor(SH110X_WHITE);
+    display.setCursor(0,0);
+    display.println(F("Rckt must be ARMed  to initiate a launch sequence."));
+    display.setCursor(32,96);
+    display.println(F("MENU"));
+    updateScreenCursor(launchWaitOptions[screenCursorIndexes.launchWaitIndex].cursor_x_index, 
+                        launchWaitOptions[screenCursorIndexes.launchWaitIndex].cursor_y_index);
+    display.display();
+}
+
 void MainScreen::jumpToScreen(Screen screen) {
     Serial.print("In jump to screen, going to: "); Serial.println(screen);
     switch (screen) {
         case MENU:
-            Serial.println("Jumpted to MENU");
+            Serial.println("Jumped to MENU");
             showMenu();
             break;
         case DATA:
-            Serial.println("Jumpted to DATA");
+            Serial.println("Jumped to DATA");
             break;
         case LAUNCH:
-            Serial.println("Jumpted to LAUNCH");
+            Serial.println("Jumped to LAUNCH");
             showLaunch();
-            //TODO
+            break;
+        case LAUNCH_WAIT:
+            Serial.println("Jumped to LAUNCH WAIT");
+            showLaunchWait();
             break;
         case SLEEP:
             //TODO
@@ -149,6 +170,11 @@ void MainScreen::receiveScreenInput(UserInput input) {
                 maxScreenIndex = &screenCursorIndexes.launchMaxIndex;
                 screenNavInfo = launchOptions;
                 break;
+            case LAUNCH_WAIT:
+                cursorIndex = &screenCursorIndexes.launchWaitIndex;
+                maxScreenIndex = &screenCursorIndexes.launchWaitMaxIndex;
+                screenNavInfo = launchWaitOptions;
+                break;
             case SLEEP:
                 cursorIndex = &screenCursorIndexes.sleepIndex;
                 maxScreenIndex = &screenCursorIndexes.sleepMaxIndex;
@@ -172,6 +198,7 @@ void MainScreen::receiveScreenInput(UserInput input) {
                 prev_x_index = screenNavInfo[*cursorIndex].cursor_x_index;
                 prev_y_index = screenNavInfo[*cursorIndex].cursor_y_index;
                 *cursorIndex = *cursorIndex-1;
+                Serial.print("Index after: "); Serial.println(*cursorIndex);
                 updateScreenCursor(screenNavInfo[*cursorIndex].cursor_x_index, 
                                         screenNavInfo[*cursorIndex].cursor_y_index, 
                                         prev_x_index, 
@@ -184,6 +211,7 @@ void MainScreen::receiveScreenInput(UserInput input) {
                 prev_x_index = screenNavInfo[*cursorIndex].cursor_x_index;
                 prev_y_index = screenNavInfo[*cursorIndex].cursor_y_index;
                 *cursorIndex = *cursorIndex+1;
+                Serial.print("Index after: "); Serial.println(*cursorIndex);
                 updateScreenCursor(screenNavInfo[*cursorIndex].cursor_x_index, 
                                         screenNavInfo[*cursorIndex].cursor_y_index, 
                                         prev_x_index, 
@@ -191,7 +219,9 @@ void MainScreen::receiveScreenInput(UserInput input) {
             }
             break;
         case ENC_PRESS:
-            if (currentScreen == MENU || currentScreen == LAUNCH) {
+            if (currentScreen == MENU || 
+                currentScreen == LAUNCH || 
+                currentScreen == LAUNCH_WAIT) {
                 Serial.print("Jumping to: "); Serial.println(screenNavInfo[*cursorIndex].nextScreen);
                 jumpToScreen(screenNavInfo[*cursorIndex].nextScreen);
             }
@@ -216,6 +246,7 @@ void MainScreen::receiveScreenInput(UserInput input) {
 void MainScreen::updateScreenCursor(uint8_t x_index, uint8_t y_index, uint8_t prev_x_index, uint8_t prev_y_index) {
     // If there were previous indices passed, use those to remove 
     // the old cursor
+    Serial.print("Create at: ");Serial.print(x_index);Serial.print(", ");Serial.println(y_index);
     if (prev_x_index != 255 && prev_y_index != 255) {
         display.setCursor(16*prev_x_index,16*prev_y_index);
         display.setTextColor(SH110X_BLACK);

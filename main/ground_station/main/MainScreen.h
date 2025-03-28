@@ -72,6 +72,7 @@ struct ScreenCursorIndex {
     uint8_t menuIndex = 0;
     uint8_t dataIndex = 0;
     uint8_t launchIndex = 0;
+    uint8_t launchWaitIndex = 0;
     uint8_t sleepIndex = 0;
     uint8_t settingsIndex = 0;
 
@@ -79,6 +80,7 @@ struct ScreenCursorIndex {
     uint8_t menuMaxIndex = 3;
     uint8_t dataMaxIndex = 0;
     uint8_t launchMaxIndex = 1;
+    uint8_t launchWaitMaxIndex = 0;
     uint8_t sleepMaxIndex = 0;
     uint8_t settingsMaxIndex = 0;
 };
@@ -102,15 +104,17 @@ class MainScreen {
         ScreenCursorIndex screenCursorIndexes;
         Screen currentScreen = MENU;
         bool data_screen_enabled;
-        bool rocket_armed;
+        bool rocket_armed = false;
         ScreenNavInfo menuOptions[4];
         ScreenNavInfo launchOptions[2];
+        ScreenNavInfo launchWaitOptions[1];
 
         // CLASS METHODS
         void initialize(uint8_t i2caddr);
         void clearDisplay();
         void showMenu();
         void showLaunch();
+        void showLaunchWait();
         void jumpToScreen(Screen screen);
         void updateLocalData(LocalData data);
         void updateRocketData(RocketData data);

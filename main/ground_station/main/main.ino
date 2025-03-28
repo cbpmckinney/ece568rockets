@@ -50,15 +50,17 @@ void initializeScreens() {
   mainScreen.receiveScreenInput(ENC_LEFT);
   delay(500);
   mainScreen.receiveScreenInput(ENC_PRESS);
-  delay(500);
+  delay(2000);
   mainScreen.receiveScreenInput(ENC_PRESS);
-  delay(500);
+  delay(5000);
+  mainScreen.receiveScreenInput(ENC_PRESS);
+  delay(1000);
   mainScreen.receiveScreenInput(ENC_PRESS);
   delay(500);
   mainScreen.receiveScreenInput(ENC_RIGHT);
-  delay(500);
+  delay(1000);
   mainScreen.receiveScreenInput(ENC_PRESS);
-  delay(500);
+  delay(2000);
   Serial.print("Wrote!");
 
   mainScreen.clearDisplay();
