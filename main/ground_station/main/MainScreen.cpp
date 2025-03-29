@@ -52,6 +52,9 @@ void MainScreen::initialize(uint8_t i2caddr) {
     launchSeqOptions[3] = {LAUNCH_BIG_RED, 5, 7}; // Submit
 
     // Set up launchWrongPinOptions
+    launchBigRedOptions[0] = {MENU, 5, 6}; // MENU
+
+    // Set up launchWrongPinOptions
     launchWrongPinOptions[0] = {MENU, 5, 6}; // MENU
 }
 
@@ -153,6 +156,21 @@ void MainScreen::showLaunchSeq() {
     display.display();
 }
 
+void MainScreen::showLaunchBigRed() {
+    currentScreen = LAUNCH_BIG_RED;
+
+    clearDisplay();
+    display.setTextSize(2);
+    display.setTextColor(SH110X_WHITE);
+    display.setCursor(0,0);
+    display.println(F("PRESS BTN TO LAUNCH!"));
+    display.setCursor(32,96);
+    display.println(F("MENU"));
+    updateScreenCursor(launchBigRedOptions[screenCursorIndexes.launchBigRedIndex].cursor_x_index, 
+                        launchBigRedOptions[screenCursorIndexes.launchBigRedIndex].cursor_y_index);
+    display.display();
+}
+
 void MainScreen::showLaunchWrongPin() {
     currentScreen = LAUNCH_WRONG_PIN;
 
@@ -192,7 +210,7 @@ void MainScreen::jumpToScreen(Screen screen) {
             break;
         case LAUNCH_BIG_RED:
             Serial.println("Jumped to LAUNCH BIG RED");
-            //TODO
+            showLaunchBigRed();
             break;
         case LAUNCH_WRONG_PIN:
             Serial.println("Jumped to LAUNCH WRONG PIN");
@@ -261,12 +279,12 @@ void MainScreen::receiveScreenInput(UserInput input) {
             case LAUNCH_BIG_RED:
                 cursorIndex = &screenCursorIndexes.launchBigRedIndex;
                 maxScreenIndex = &screenCursorIndexes.launchBigRedMaxIndex;
-                screenNavInfo = launchSeqOptions;
+                screenNavInfo = launchBigRedOptions;
                 break;
             case LAUNCH_WRONG_PIN:
                 cursorIndex = &screenCursorIndexes.launchWrongPinIndex;
                 maxScreenIndex = &screenCursorIndexes.launchWrongPinMaxIndex;
-                screenNavInfo = launchSeqOptions;
+                screenNavInfo = launchWrongPinOptions;
                 break;
             case SLEEP:
                 cursorIndex = &screenCursorIndexes.sleepIndex;

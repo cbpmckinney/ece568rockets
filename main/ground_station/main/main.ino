@@ -11,8 +11,10 @@ William Li
 #include "MainScreen.h"
 #include "AuxillaryScreen.h"
 
+#define DEBUG_TIME_SCALE 250
+
 MainScreen mainScreen = MainScreen();
-MainScreen auxScreen = MainScreen();
+AuxillaryScreen auxScreen = AuxillaryScreen();
 
 void setup() {
   // put your setup code here, to run once:
@@ -32,66 +34,80 @@ void initializeScreens() {
 
   mainScreen.showMenu();
 
-  auxScreen.showLaunchSeq();
-  delay(500);
-  auxScreen.receiveScreenInput(ENC_RIGHT);
-  delay(500);
-  auxScreen.receiveScreenInput(ENC_RIGHT);
-  delay(500);
-  auxScreen.receiveScreenInput(ENC_LEFT);
-  delay(500);
-  auxScreen.receiveScreenInput(ENC_PRESS);
-  delay(500);
-  auxScreen.receiveScreenInput(ENC_LEFT);
-  delay(500);
-  auxScreen.receiveScreenInput(ENC_RIGHT);
-  delay(500);
-  auxScreen.receiveScreenInput(ENC_PRESS);
-  delay(500);
-  auxScreen.receiveScreenInput(ENC_RIGHT);
-  delay(500);
-  auxScreen.receiveScreenInput(ENC_RIGHT);
-  delay(500);
-  auxScreen.receiveScreenInput(ENC_RIGHT);
-  delay(500);
-  auxScreen.receiveScreenInput(ENC_PRESS);
-  delay(2000);
-  auxScreen.receiveScreenInput(ENC_PRESS);
-  delay(2000);
-  auxScreen.receiveScreenInput(ENC_PRESS);
-  delay(1000);
-  auxScreen.clearDisplay();
+  mainScreen.receiveScreenInput(ENC_RIGHT);
+  delay(1*DEBUG_TIME_SCALE);
+  mainScreen.receiveScreenInput(ENC_RIGHT);
+  delay(1*DEBUG_TIME_SCALE);
+  mainScreen.receiveScreenInput(ENC_LEFT);
+  delay(1*DEBUG_TIME_SCALE);
+  mainScreen.receiveScreenInput(ENC_RIGHT);
+  delay(1*DEBUG_TIME_SCALE);
+  mainScreen.receiveScreenInput(ENC_RIGHT);
+  delay(1*DEBUG_TIME_SCALE);
+  mainScreen.receiveScreenInput(ENC_RIGHT);
+  delay(1*DEBUG_TIME_SCALE); 
+  mainScreen.receiveScreenInput(ENC_LEFT);
+  delay(1*DEBUG_TIME_SCALE);
+  mainScreen.receiveScreenInput(ENC_LEFT);
+  delay(1*DEBUG_TIME_SCALE);
+  mainScreen.receiveScreenInput(ENC_PRESS); // Launch Screen
+  delay(4*DEBUG_TIME_SCALE);
+  mainScreen.receiveScreenInput(ENC_PRESS); // Rocket Must Be Armed Screen
+  delay(10*DEBUG_TIME_SCALE);
+  mainScreen.receiveScreenInput(ENC_PRESS); // Back to Menu Screen
+  delay(2*DEBUG_TIME_SCALE);
+  mainScreen.receiveScreenInput(ENC_PRESS); // Launch Screen
+  delay(1*DEBUG_TIME_SCALE);
+  mainScreen.receiveScreenInput(ENC_RIGHT); // Launch - N
+  delay(2*DEBUG_TIME_SCALE);
+  mainScreen.receiveScreenInput(ENC_PRESS); // Back to Menu Screen
+  delay(1*DEBUG_TIME_SCALE);
+  mainScreen.receiveScreenInput(ENC_PRESS); // Launch Screen
+  delay(1*DEBUG_TIME_SCALE);
+  mainScreen.receiveScreenInput(ENC_LEFT); // Launch - Y
+  delay(1*DEBUG_TIME_SCALE);
+  mainScreen.rocket_armed = true; // Arm rocket for testing
+  mainScreen.receiveScreenInput(ENC_PRESS); // Launch Seq Screen
+  delay(1*DEBUG_TIME_SCALE);
+  mainScreen.receiveScreenInput(ENC_RIGHT);
+  delay(1*DEBUG_TIME_SCALE);
+  mainScreen.receiveScreenInput(ENC_RIGHT);
+  delay(1*DEBUG_TIME_SCALE);
+  mainScreen.receiveScreenInput(ENC_LEFT);
+  delay(1*DEBUG_TIME_SCALE);
+  mainScreen.receiveScreenInput(ENC_PRESS); // Pin value 1 submitted
+  delay(1*DEBUG_TIME_SCALE);
+  mainScreen.receiveScreenInput(ENC_LEFT);
+  delay(1*DEBUG_TIME_SCALE);
+  mainScreen.receiveScreenInput(ENC_RIGHT);
+  delay(1*DEBUG_TIME_SCALE);
+  mainScreen.receiveScreenInput(ENC_PRESS); // Pin value 2 submitted
+  delay(1*DEBUG_TIME_SCALE);
+  mainScreen.receiveScreenInput(ENC_RIGHT);
+  delay(1*DEBUG_TIME_SCALE);
+  mainScreen.receiveScreenInput(ENC_RIGHT);
+  delay(1*DEBUG_TIME_SCALE);
+  mainScreen.receiveScreenInput(ENC_RIGHT);
+  delay(1*DEBUG_TIME_SCALE);
+  mainScreen.receiveScreenInput(ENC_PRESS); // Pin value 3 submitted
+  delay(4*DEBUG_TIME_SCALE);
 
-  //mainScreen.showMenu();
-  /*
-  mainScreen.receiveScreenInput(ENC_RIGHT);
-  delay(500);
-  mainScreen.receiveScreenInput(ENC_RIGHT);
-  delay(500);
-  mainScreen.receiveScreenInput(ENC_LEFT);
-  delay(500);
-  mainScreen.receiveScreenInput(ENC_RIGHT);
-  delay(500);
-  mainScreen.receiveScreenInput(ENC_RIGHT);
-  delay(500);
-  mainScreen.receiveScreenInput(ENC_RIGHT);
-  delay(500); 
-  mainScreen.receiveScreenInput(ENC_LEFT);
-  delay(500);
-  mainScreen.receiveScreenInput(ENC_LEFT);
-  delay(500);
-  mainScreen.receiveScreenInput(ENC_PRESS);
-  delay(2000);
-  mainScreen.receiveScreenInput(ENC_PRESS);
-  delay(5000);
-  mainScreen.receiveScreenInput(ENC_PRESS);
-  delay(1000);
-  mainScreen.receiveScreenInput(ENC_PRESS);
-  delay(500);
-  mainScreen.receiveScreenInput(ENC_RIGHT);
-  delay(1000);
-  mainScreen.receiveScreenInput(ENC_PRESS);
-  delay(2000);*/
+  // We are now about to submit pin, verify validity
+  uint8_t* pin = mainScreen.getInputPin();
+  Serial.print("Checking pin...");
+  if (pin[0] == 1 && pin[1] == 1 && pin[2] == 3)
+  {
+    Serial.println("Pin correct!");
+    mainScreen.pin_correct = true;
+  } else {
+    Serial.println("Pin incorrect!");
+  }
+
+  mainScreen.receiveScreenInput(ENC_PRESS); // Submit pin, go to btn launch screen
+  delay(4*DEBUG_TIME_SCALE);
+  mainScreen.receiveScreenInput(ENC_PRESS); // Go back to menu screen
+  delay(2*DEBUG_TIME_SCALE);
+ 
   Serial.println("Wrote!");
 
   mainScreen.clearDisplay();

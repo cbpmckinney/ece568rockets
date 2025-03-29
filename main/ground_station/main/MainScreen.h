@@ -120,6 +120,7 @@ class MainScreen {
         ScreenNavInfo launchOptions[2];
         ScreenNavInfo launchWaitOptions[1];
         ScreenNavInfo launchSeqOptions[4];
+        ScreenNavInfo launchBigRedOptions[1];
         ScreenNavInfo launchWrongPinOptions[1];
         uint8_t pin[3] = {0, 0, 0};
 
@@ -130,6 +131,7 @@ class MainScreen {
         void showLaunch();
         void showLaunchWait();
         void showLaunchSeq();
+        void showLaunchBigRed();
         void showLaunchWrongPin();
         void jumpToScreen(Screen screen);
         void updateLocalData(LocalData data);
@@ -137,7 +139,7 @@ class MainScreen {
         void receiveScreenInput(UserInput input);
         void updateScreenCursor(uint8_t x_index, uint8_t y_index, uint8_t prev_x_index=255, uint8_t prev_y_index=255);
         void updatePinNumber(uint8_t x_index, uint8_t y_index, uint8_t value, uint8_t prev_value=255);
-        uint8_t* getInputPin();
+        uint8_t* getInputPin(); // PIN IS MUTABLE, BAD PRACTICE?
 };
 
 #endif // _MainScreen_
