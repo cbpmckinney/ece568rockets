@@ -485,3 +485,15 @@ void MainScreen::updatePinNumber(uint8_t x_index, uint8_t y_index, uint8_t value
 uint8_t* MainScreen::getInputPin() {
     return pin;
 }
+
+void MainScreen::resetIndices() {
+    screenCursorIndexes.menuIndex = 0;
+    screenCursorIndexes.dataIndex = 0;
+    screenCursorIndexes.launchIndex = 0;
+    screenCursorIndexes.launchWaitIndex = 0;
+    screenCursorIndexes.launchSeqIndex = 0;
+    screenCursorIndexes.launchBigRedIndex = 0;
+    screenCursorIndexes.launchWrongPinIndex = 0;
+    screenCursorIndexes.sleepIndex = 0;
+    screenCursorIndexes.settingsIndex = 0;
+}
