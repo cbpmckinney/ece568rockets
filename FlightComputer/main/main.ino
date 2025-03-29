@@ -137,7 +137,7 @@ void loop() {
         }
       #endif
         static uint8_t debounceVelocityCount = 0;
-        static uint8_t simAlt = 0;
+        static uint8_t simAlt = 0; // REPLACE WITH ACTUAL CURRENT ALTITUDE
         statusByte.bits.dof_sensor         = dofSensor.collectData( simAlt++ );
         statusByte.bits.altitude_sensor    = altitude_sensor.collectData();
         statusByte.bits.temperature_sensor = temperature_sensor.collectData();
