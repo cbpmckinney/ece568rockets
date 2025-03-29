@@ -78,8 +78,10 @@ class MainScreen {
         bool data_screen_enabled = false;
         bool rocket_armed = false;
         bool key_inserted = false;
+        bool ready_to_submit_pin = true;
         bool pin_correct = false;
         bool request_show_data = false;
+        bool primed = false;
         Screen data_screen_requested = NONE;
         ScreenNavInfo menuOptions[4];
         ScreenNavInfo dataOptions[3];

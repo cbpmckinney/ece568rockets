@@ -206,7 +206,7 @@ void MainScreen::showLaunchWrongPin() {
     display.setTextSize(2);
     display.setTextColor(SH110X_WHITE);
     display.setCursor(0,0);
-    display.println(F("Incorrect pin"));
+    display.println(F("Incorrect pin or key not inserted"));
     display.setCursor(32,96);
     display.println(F("MENU"));
     updateScreenCursor(launchWrongPinOptions[screenCursorIndexes.launchWrongPinIndex].cursor_x_index, 
@@ -404,6 +404,12 @@ void MainScreen::receiveScreenInput(UserInput input) {
                                         screenNavInfo[*cursorIndex].cursor_y_index, 
                                         prev_x_index, 
                                         prev_y_index);
+
+                    if (*cursorIndex == maxScreenIndex) {
+                        // Ready to submit
+                        ready_to_submit_pin = true;
+                    }
+
                 } else {
                     // All pin inputs entered, now requesting we submit pin and move to another screen.
                     // The screen is NOT cognizant of any protection control, it just manages what is
@@ -417,10 +423,15 @@ void MainScreen::receiveScreenInput(UserInput input) {
                     if (pin_correct && key_inserted) {
                         Serial.print("Jumping to: "); Serial.println(targetScreen); // RED BUTTON LAUNCH SCREEN
                         jumpToScreen(targetScreen);
+                        primed = true;
                     } else {
                         Serial.print("Jumping to: "); Serial.println(LAUNCH_WRONG_PIN); // RED BUTTON LAUNCH SCREEN
                         jumpToScreen(LAUNCH_WRONG_PIN);
                     }
+
+                    // Reset pin screen
+                    pin_correct = false;
+                    ready_to_submit_pin = false;
                 }
             } else if (currentScreen == DATA) {
                 if (targetScreen == NONE) {
