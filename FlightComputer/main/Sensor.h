@@ -4,7 +4,7 @@
 
 typedef struct per10mData
 {
-    uint8_t tenMeterFloor;
+    uint32_t tenMeterFloor;
     float   data;
 } per10mData_t;
 
