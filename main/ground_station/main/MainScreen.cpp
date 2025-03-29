@@ -44,6 +44,11 @@ void MainScreen::initialize(uint8_t i2caddr) {
 
     // Set up launchWaitOptions
     launchWaitOptions[0] = {MENU, 5, 6}; // MENU
+
+    // Set up launchSeqOptions
+    launchSeqOptions[0] = {NONE, 2, 5, 3, 10}; // NUM
+    launchSeqOptions[1] = {NONE, 4, 5, 7, 10}; // NUM
+    launchSeqOptions[2] = {NONE, 6, 5, 11, 10}; // NUM
 }
 
 void MainScreen::clearDisplay() {
@@ -88,17 +93,55 @@ void MainScreen::showLaunch() {
 }
 
 void MainScreen::showLaunchWait() {
-    currentScreen = LAUNCH_WAIT;
+    if (rocket_armed) {
+        // Skip wait screen, override to LAUNCH_SEQ
+        showLaunchSeq();
+    } else
+    {
+        currentScreen = LAUNCH_WAIT;
+
+        clearDisplay();
+        display.setTextSize(2);
+        display.setTextColor(SH110X_WHITE);
+        display.setCursor(0,0);
+        display.println(F("Rckt must be ARMed  to initiate a launch sequence."));
+        display.setCursor(32,96);
+        display.println(F("MENU"));
+        updateScreenCursor(launchWaitOptions[screenCursorIndexes.launchWaitIndex].cursor_x_index, 
+                            launchWaitOptions[screenCursorIndexes.launchWaitIndex].cursor_y_index);
+        display.display();
+    }
+}
+
+void MainScreen::showLaunchSeq() {
+    currentScreen = LAUNCH_SEQ;
 
     clearDisplay();
     display.setTextSize(2);
     display.setTextColor(SH110X_WHITE);
     display.setCursor(0,0);
-    display.println(F("Rckt must be ARMed  to initiate a launch sequence."));
-    display.setCursor(32,96);
-    display.println(F("MENU"));
-    updateScreenCursor(launchWaitOptions[screenCursorIndexes.launchWaitIndex].cursor_x_index, 
-                        launchWaitOptions[screenCursorIndexes.launchWaitIndex].cursor_y_index);
+    display.println(F("Insert key"));
+    display.setCursor(0,32);
+    display.println(F("Insert pin"));
+
+    // Lines for pin input
+    display.setCursor(24,84);
+    display.println(F("_"));
+    display.setCursor(56,84);
+    display.println(F("_"));
+    display.setCursor(88,84);
+    display.println(F("_"));
+
+    // Show current pin
+    display.setCursor(24,80);
+    display.println(pin[0]);
+    display.setCursor(56,80);
+    display.println(pin[1]);
+    display.setCursor(88,80);
+    display.println(pin[2]);
+
+    updateScreenCursor(launchSeqOptions[screenCursorIndexes.launchSeqIndex].cursor_x_index, 
+                        launchSeqOptions[screenCursorIndexes.launchSeqIndex].cursor_y_index);
     display.display();
 }
 
@@ -147,11 +190,13 @@ void MainScreen::updateRocketData(RocketData data) {
 }
 
 void MainScreen::receiveScreenInput(UserInput input) {
+    Serial.println("Called receiveScreenInput");
     uint8_t* cursorIndex = NULL;
     uint8_t* maxScreenIndex = NULL;
     ScreenNavInfo* screenNavInfo = NULL;
     uint8_t prev_x_index = 255;
     uint8_t prev_y_index = 255;
+    Screen targetScreen;
 
     // Grab information related to current screen.
     if (input == ENC_LEFT or input == ENC_RIGHT or input == ENC_PRESS) {
@@ -175,6 +220,11 @@ void MainScreen::receiveScreenInput(UserInput input) {
                 maxScreenIndex = &screenCursorIndexes.launchWaitMaxIndex;
                 screenNavInfo = launchWaitOptions;
                 break;
+            case LAUNCH_SEQ:
+                cursorIndex = &screenCursorIndexes.launchSeqIndex;
+                maxScreenIndex = &screenCursorIndexes.launchSeqMaxIndex;
+                screenNavInfo = launchSeqOptions;
+                break;
             case SLEEP:
                 cursorIndex = &screenCursorIndexes.sleepIndex;
                 maxScreenIndex = &screenCursorIndexes.sleepMaxIndex;
@@ -194,36 +244,97 @@ void MainScreen::receiveScreenInput(UserInput input) {
     switch (input) {
         case ENC_LEFT:
             // if encoder turned left, decrement index by one and update cursor location
-            if (*cursorIndex > 0) {
-                prev_x_index = screenNavInfo[*cursorIndex].cursor_x_index;
-                prev_y_index = screenNavInfo[*cursorIndex].cursor_y_index;
-                *cursorIndex = *cursorIndex-1;
-                Serial.print("Index after: "); Serial.println(*cursorIndex);
-                updateScreenCursor(screenNavInfo[*cursorIndex].cursor_x_index, 
-                                        screenNavInfo[*cursorIndex].cursor_y_index, 
-                                        prev_x_index, 
-                                        prev_y_index);
-            }
+            
+                if (currentScreen == MENU || 
+                    currentScreen == LAUNCH || 
+                    currentScreen == LAUNCH_WAIT) 
+                {
+                    if (*cursorIndex > 0) {
+                    prev_x_index = screenNavInfo[*cursorIndex].cursor_x_index;
+                    prev_y_index = screenNavInfo[*cursorIndex].cursor_y_index;
+                    *cursorIndex = *cursorIndex-1;
+                    Serial.print("Index after: "); Serial.println(*cursorIndex);
+
+                    updateScreenCursor(screenNavInfo[*cursorIndex].cursor_x_index, 
+                                            screenNavInfo[*cursorIndex].cursor_y_index, 
+                                            prev_x_index, 
+                                            prev_y_index);
+                    }
+                }
+                else if (currentScreen == LAUNCH_SEQ)
+                {
+                    if (pin[*cursorIndex] > 0) {
+                        uint8_t prev_pin_value = pin[*cursorIndex];
+                        pin[*cursorIndex] = pin[*cursorIndex] - 1;
+
+                        updatePinNumber(screenNavInfo[*cursorIndex].pin_x_index,
+                                        screenNavInfo[*cursorIndex].pin_y_index,
+                                        pin[*cursorIndex],
+                                        prev_pin_value);
+                    }
+                }
+            
             break;
         case ENC_RIGHT:
             // if encoder turned right, increment index by one and update cursor location
-            if (*cursorIndex < *maxScreenIndex) {
-                prev_x_index = screenNavInfo[*cursorIndex].cursor_x_index;
-                prev_y_index = screenNavInfo[*cursorIndex].cursor_y_index;
-                *cursorIndex = *cursorIndex+1;
-                Serial.print("Index after: "); Serial.println(*cursorIndex);
-                updateScreenCursor(screenNavInfo[*cursorIndex].cursor_x_index, 
+            
+                if (currentScreen == MENU || 
+                    currentScreen == LAUNCH || 
+                    currentScreen == LAUNCH_WAIT) 
+                {
+                    if (*cursorIndex < *maxScreenIndex) {
+                        prev_x_index = screenNavInfo[*cursorIndex].cursor_x_index;
+                        prev_y_index = screenNavInfo[*cursorIndex].cursor_y_index;
+                        *cursorIndex = *cursorIndex+1;
+                        Serial.print("Index after: "); Serial.println(*cursorIndex);
+
+                        updateScreenCursor(screenNavInfo[*cursorIndex].cursor_x_index, 
+                                                screenNavInfo[*cursorIndex].cursor_y_index, 
+                                                prev_x_index, 
+                                                prev_y_index);
+                    }
+                } 
+                else if (currentScreen == LAUNCH_SEQ)
+                {
+                    Serial.println("In ENC_RIGHT for Launch_SEQ");
+                    Serial.print("  Orig Pin value: "); Serial.println(pin[*cursorIndex]);
+                    if (pin[*cursorIndex] < 9) {
+                        uint8_t prev_pin_value = pin[*cursorIndex];
+                        pin[*cursorIndex] = pin[*cursorIndex]+1;
+                        
+                        Serial.print("  New Pin value: "); Serial.println(pin[*cursorIndex]);
+
+                        updatePinNumber(screenNavInfo[*cursorIndex].pin_x_index,
+                                        screenNavInfo[*cursorIndex].pin_y_index,
+                                        pin[*cursorIndex],
+                                        prev_pin_value);
+                    }
+                }
+            break;
+        case ENC_PRESS:
+            targetScreen = screenNavInfo[*cursorIndex].nextScreen;
+
+            if (currentScreen == MENU || 
+                currentScreen == LAUNCH || 
+                currentScreen == LAUNCH_WAIT) 
+            {
+                Serial.print("Jumping to: "); Serial.println(targetScreen);
+                jumpToScreen(targetScreen);
+            } 
+            else if (currentScreen == LAUNCH_SEQ) 
+            {
+                if (targetScreen == NONE) {
+                    prev_x_index = screenNavInfo[*cursorIndex].cursor_x_index;
+                    prev_y_index = screenNavInfo[*cursorIndex].cursor_y_index;
+                    *cursorIndex = *cursorIndex+1;
+                    updateScreenCursor(screenNavInfo[*cursorIndex].cursor_x_index, 
                                         screenNavInfo[*cursorIndex].cursor_y_index, 
                                         prev_x_index, 
                                         prev_y_index);
-            }
-            break;
-        case ENC_PRESS:
-            if (currentScreen == MENU || 
-                currentScreen == LAUNCH || 
-                currentScreen == LAUNCH_WAIT) {
-                Serial.print("Jumping to: "); Serial.println(screenNavInfo[*cursorIndex].nextScreen);
-                jumpToScreen(screenNavInfo[*cursorIndex].nextScreen);
+                } else {
+                    Serial.print("Jumping to: "); Serial.println(targetScreen);
+                    jumpToScreen(targetScreen);
+                }
             }
             break;
         case BIG_RED:
@@ -251,12 +362,26 @@ void MainScreen::updateScreenCursor(uint8_t x_index, uint8_t y_index, uint8_t pr
         display.setCursor(16*prev_x_index,16*prev_y_index);
         display.setTextColor(SH110X_BLACK);
         display.println(F("<"));
-        display.display();
     }
 
     // Redraws cursor
     display.setCursor(16*x_index,16*y_index);
     display.setTextColor(SH110X_WHITE);
     display.println(F("<"));
+    display.display();
+}
+
+void MainScreen::updatePinNumber(uint8_t x_index, uint8_t y_index, uint8_t value, uint8_t prev_value) {
+    Serial.print("Updating pin number: "); Serial.println(x_index); Serial.println(y_index); Serial.println(value); Serial.println(prev_value);
+    if (prev_value != 255) {
+        display.setCursor(8*x_index,8*y_index);
+        display.setTextColor(SH110X_BLACK);
+        display.println(prev_value);
+    }
+
+    // Redraws cursor
+    display.setCursor(8*x_index,8*y_index);
+    display.setTextColor(SH110X_WHITE);
+    display.println(value);
     display.display();
 }

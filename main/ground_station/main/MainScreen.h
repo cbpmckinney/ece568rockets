@@ -38,7 +38,8 @@ enum Screen {
     LAUNCH_SEQ,
     LAUNCH_BIG_RED,
     SLEEP,
-    SETTINGS
+    SETTINGS,
+    NONE
 };
 
 // Expected structure of local data
@@ -73,6 +74,7 @@ struct ScreenCursorIndex {
     uint8_t dataIndex = 0;
     uint8_t launchIndex = 0;
     uint8_t launchWaitIndex = 0;
+    uint8_t launchSeqIndex = 0;
     uint8_t sleepIndex = 0;
     uint8_t settingsIndex = 0;
 
@@ -81,6 +83,7 @@ struct ScreenCursorIndex {
     uint8_t dataMaxIndex = 0;
     uint8_t launchMaxIndex = 1;
     uint8_t launchWaitMaxIndex = 0;
+    uint8_t launchSeqMaxIndex = 3;
     uint8_t sleepMaxIndex = 0;
     uint8_t settingsMaxIndex = 0;
 };
@@ -91,6 +94,8 @@ struct ScreenNavInfo {
     Screen nextScreen;
     uint8_t cursor_x_index;
     uint8_t cursor_y_index;
+    uint8_t pin_x_index = 0;
+    uint8_t pin_y_index = 0;
 };
 
 class MainScreen {
@@ -108,6 +113,8 @@ class MainScreen {
         ScreenNavInfo menuOptions[4];
         ScreenNavInfo launchOptions[2];
         ScreenNavInfo launchWaitOptions[1];
+        ScreenNavInfo launchSeqOptions[4];
+        uint8_t pin[3] = {0, 0, 0};
 
         // CLASS METHODS
         void initialize(uint8_t i2caddr);
@@ -115,11 +122,13 @@ class MainScreen {
         void showMenu();
         void showLaunch();
         void showLaunchWait();
+        void showLaunchSeq();
         void jumpToScreen(Screen screen);
         void updateLocalData(LocalData data);
         void updateRocketData(RocketData data);
         void receiveScreenInput(UserInput input);
         void updateScreenCursor(uint8_t x_index, uint8_t y_index, uint8_t prev_x_index=255, uint8_t prev_y_index=255);
+        void updatePinNumber(uint8_t x_index, uint8_t y_index, uint8_t value, uint8_t prev_value=255);
 };
 
 #endif // _MainScreen_

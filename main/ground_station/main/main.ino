@@ -12,7 +12,7 @@ William Li
 #include "AuxillaryScreen.h"
 
 MainScreen mainScreen = MainScreen();
-AuxillaryScreen auxScreen = AuxillaryScreen();
+MainScreen auxScreen = MainScreen();
 
 void setup() {
   // put your setup code here, to run once:
@@ -32,7 +32,21 @@ void initializeScreens() {
 
   mainScreen.showMenu();
 
+  auxScreen.showLaunchSeq();
+  delay(1000);
+  auxScreen.receiveScreenInput(ENC_RIGHT);
+  delay(1000);
+  auxScreen.receiveScreenInput(ENC_RIGHT);
+  delay(1000);
+  auxScreen.receiveScreenInput(ENC_LEFT);
+  delay(1000);
+  auxScreen.receiveScreenInput(ENC_PRESS);
+  delay(1000);
+  auxScreen.receiveScreenInput(ENC_LEFT);
+  delay(1000);
+  auxScreen.receiveScreenInput(ENC_RIGHT);
   //mainScreen.showMenu();
+  /*
   mainScreen.receiveScreenInput(ENC_RIGHT);
   delay(500);
   mainScreen.receiveScreenInput(ENC_RIGHT);
@@ -60,8 +74,8 @@ void initializeScreens() {
   mainScreen.receiveScreenInput(ENC_RIGHT);
   delay(1000);
   mainScreen.receiveScreenInput(ENC_PRESS);
-  delay(2000);
-  Serial.print("Wrote!");
+  delay(2000);*/
+  Serial.println("Wrote!");
 
   mainScreen.clearDisplay();
 
