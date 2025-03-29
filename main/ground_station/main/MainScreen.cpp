@@ -49,6 +49,7 @@ void MainScreen::initialize(uint8_t i2caddr) {
     launchSeqOptions[0] = {NONE, 2, 5, 3, 10}; // NUM
     launchSeqOptions[1] = {NONE, 4, 5, 7, 10}; // NUM
     launchSeqOptions[2] = {NONE, 6, 5, 11, 10}; // NUM
+    launchSeqOptions[3] = {LAUNCH_BIG_RED, 5, 7}; // Submit
 }
 
 void MainScreen::clearDisplay() {
@@ -95,7 +96,7 @@ void MainScreen::showLaunch() {
 void MainScreen::showLaunchWait() {
     if (rocket_armed) {
         // Skip wait screen, override to LAUNCH_SEQ
-        showLaunchSeq();
+        jumpToScreen(LAUNCH_SEQ);
     } else
     {
         currentScreen = LAUNCH_WAIT;
@@ -140,10 +141,16 @@ void MainScreen::showLaunchSeq() {
     display.setCursor(88,80);
     display.println(pin[2]);
 
+    // Submit
+    display.setCursor(0,112);
+    display.println(F("SUBMIT"));
+
     updateScreenCursor(launchSeqOptions[screenCursorIndexes.launchSeqIndex].cursor_x_index, 
                         launchSeqOptions[screenCursorIndexes.launchSeqIndex].cursor_y_index);
     display.display();
 }
+
+
 
 void MainScreen::jumpToScreen(Screen screen) {
     Serial.print("In jump to screen, going to: "); Serial.println(screen);
@@ -163,7 +170,16 @@ void MainScreen::jumpToScreen(Screen screen) {
             Serial.println("Jumped to LAUNCH WAIT");
             showLaunchWait();
             break;
-        case SLEEP:
+        case LAUNCH_SEQ:
+            Serial.println("Jumped to LAUNCH SEQ");
+            showLaunchSeq();
+            break;
+        case LAUNCH_BIG_RED:
+            Serial.println("Jumped to LAUNCH BIG RED");
+            //TODO
+            break;
+        case LAUNCH_WRONG_PIN:
+            Serial.println("Jumped to LAUNCH WRONG PIN");
             //TODO
             break;
         case SETTINGS:
@@ -296,7 +312,6 @@ void MainScreen::receiveScreenInput(UserInput input) {
                 } 
                 else if (currentScreen == LAUNCH_SEQ)
                 {
-                    Serial.println("In ENC_RIGHT for Launch_SEQ");
                     Serial.print("  Orig Pin value: "); Serial.println(pin[*cursorIndex]);
                     if (pin[*cursorIndex] < 9) {
                         uint8_t prev_pin_value = pin[*cursorIndex];
@@ -324,6 +339,7 @@ void MainScreen::receiveScreenInput(UserInput input) {
             else if (currentScreen == LAUNCH_SEQ) 
             {
                 if (targetScreen == NONE) {
+                    // Currently looking at pin input. Need to update pin values
                     prev_x_index = screenNavInfo[*cursorIndex].cursor_x_index;
                     prev_y_index = screenNavInfo[*cursorIndex].cursor_y_index;
                     *cursorIndex = *cursorIndex+1;
@@ -332,8 +348,22 @@ void MainScreen::receiveScreenInput(UserInput input) {
                                         prev_x_index, 
                                         prev_y_index);
                 } else {
-                    Serial.print("Jumping to: "); Serial.println(targetScreen);
-                    jumpToScreen(targetScreen);
+                    // All pin inputs entered, now requesting we submit pin and move to another screen.
+                    // The screen is NOT cognizant of any protection control, it just manages what is
+                    // displayed and translates screen info into data.
+                    //
+                    // Enforcment of the pin MUST be managed outside of the MainScreen class via pin_correct
+                    // and MainScreen::getPin().
+                    //
+                    // This can be done by checking if user is about to ENC_PRESS to submit pin, verifying pin,
+                    // then setting pin_correct to true/false.
+                    if (pin_correct) {
+                        Serial.print("Jumping to: "); Serial.println(targetScreen); // RED BUTTON LAUNCH SCREEN
+                        jumpToScreen(targetScreen);
+                    } else {
+                        Serial.print("Jumping to: "); Serial.println(LAUNCH_WRONG_PIN); // RED BUTTON LAUNCH SCREEN
+                        jumpToScreen(LAUNCH_WRONG_PIN);
+                    }
                 }
             }
             break;
@@ -384,4 +414,8 @@ void MainScreen::updatePinNumber(uint8_t x_index, uint8_t y_index, uint8_t value
     display.setTextColor(SH110X_WHITE);
     display.println(value);
     display.display();
+}
+
+uint8_t* MainScreen::getInputPin() {
+    return pin;
 }

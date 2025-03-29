@@ -37,6 +37,7 @@ enum Screen {
     LAUNCH_WAIT,
     LAUNCH_SEQ,
     LAUNCH_BIG_RED,
+    LAUNCH_WRONG_PIN,
     SLEEP,
     SETTINGS,
     NONE
@@ -110,6 +111,7 @@ class MainScreen {
         Screen currentScreen = MENU;
         bool data_screen_enabled;
         bool rocket_armed = false;
+        bool pin_correct = false;
         ScreenNavInfo menuOptions[4];
         ScreenNavInfo launchOptions[2];
         ScreenNavInfo launchWaitOptions[1];
@@ -129,6 +131,7 @@ class MainScreen {
         void receiveScreenInput(UserInput input);
         void updateScreenCursor(uint8_t x_index, uint8_t y_index, uint8_t prev_x_index=255, uint8_t prev_y_index=255);
         void updatePinNumber(uint8_t x_index, uint8_t y_index, uint8_t value, uint8_t prev_value=255);
+        uint8_t* getInputPin();
 };
 
 #endif // _MainScreen_

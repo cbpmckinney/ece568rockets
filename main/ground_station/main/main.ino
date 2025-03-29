@@ -33,18 +33,30 @@ void initializeScreens() {
   mainScreen.showMenu();
 
   auxScreen.showLaunchSeq();
-  delay(1000);
+  delay(500);
   auxScreen.receiveScreenInput(ENC_RIGHT);
-  delay(1000);
+  delay(500);
   auxScreen.receiveScreenInput(ENC_RIGHT);
-  delay(1000);
+  delay(500);
   auxScreen.receiveScreenInput(ENC_LEFT);
-  delay(1000);
+  delay(500);
   auxScreen.receiveScreenInput(ENC_PRESS);
-  delay(1000);
+  delay(500);
   auxScreen.receiveScreenInput(ENC_LEFT);
-  delay(1000);
+  delay(500);
   auxScreen.receiveScreenInput(ENC_RIGHT);
+  delay(500);
+  auxScreen.receiveScreenInput(ENC_PRESS);
+  delay(500);
+  auxScreen.receiveScreenInput(ENC_RIGHT);
+  delay(500);
+  auxScreen.receiveScreenInput(ENC_RIGHT);
+  delay(500);
+  auxScreen.receiveScreenInput(ENC_RIGHT);
+  delay(500);
+  auxScreen.receiveScreenInput(ENC_PRESS);
+  delay(2000);
+  auxScreen.receiveScreenInput(ENC_PRESS);
   //mainScreen.showMenu();
   /*
   mainScreen.receiveScreenInput(ENC_RIGHT);
