@@ -10,8 +10,7 @@ William Li
 #include <Adafruit_SH110X.h>
 #include "MainScreen.h"
 #include "AuxillaryScreen.h"
-
-#define DEBUG_TIME_SCALE 250
+#include "OLEDScreenTests.h"
 
 MainScreen mainScreen = MainScreen();
 AuxillaryScreen auxScreen = AuxillaryScreen();
@@ -32,85 +31,7 @@ void initializeScreens() {
   mainScreen.initialize(0x3D);
   auxScreen.initialize(0x3C);
 
-  mainScreen.showMenu();
-
-  mainScreen.receiveScreenInput(ENC_RIGHT);
-  delay(1*DEBUG_TIME_SCALE);
-  mainScreen.receiveScreenInput(ENC_RIGHT);
-  delay(1*DEBUG_TIME_SCALE);
-  mainScreen.receiveScreenInput(ENC_LEFT);
-  delay(1*DEBUG_TIME_SCALE);
-  mainScreen.receiveScreenInput(ENC_RIGHT);
-  delay(1*DEBUG_TIME_SCALE);
-  mainScreen.receiveScreenInput(ENC_RIGHT);
-  delay(1*DEBUG_TIME_SCALE);
-  mainScreen.receiveScreenInput(ENC_RIGHT);
-  delay(1*DEBUG_TIME_SCALE); 
-  mainScreen.receiveScreenInput(ENC_LEFT);
-  delay(1*DEBUG_TIME_SCALE);
-  mainScreen.receiveScreenInput(ENC_LEFT);
-  delay(1*DEBUG_TIME_SCALE);
-  mainScreen.receiveScreenInput(ENC_PRESS); // Launch Screen
-  delay(4*DEBUG_TIME_SCALE);
-  mainScreen.receiveScreenInput(ENC_PRESS); // Rocket Must Be Armed Screen
-  delay(10*DEBUG_TIME_SCALE);
-  mainScreen.receiveScreenInput(ENC_PRESS); // Back to Menu Screen
-  delay(2*DEBUG_TIME_SCALE);
-  mainScreen.receiveScreenInput(ENC_PRESS); // Launch Screen
-  delay(1*DEBUG_TIME_SCALE);
-  mainScreen.receiveScreenInput(ENC_RIGHT); // Launch - N
-  delay(2*DEBUG_TIME_SCALE);
-  mainScreen.receiveScreenInput(ENC_PRESS); // Back to Menu Screen
-  delay(1*DEBUG_TIME_SCALE);
-  mainScreen.receiveScreenInput(ENC_PRESS); // Launch Screen
-  delay(1*DEBUG_TIME_SCALE);
-  mainScreen.receiveScreenInput(ENC_LEFT); // Launch - Y
-  delay(1*DEBUG_TIME_SCALE);
-  mainScreen.rocket_armed = true; // Arm rocket for testing
-  mainScreen.receiveScreenInput(ENC_PRESS); // Launch Seq Screen
-  delay(1*DEBUG_TIME_SCALE);
-  mainScreen.receiveScreenInput(ENC_RIGHT);
-  delay(1*DEBUG_TIME_SCALE);
-  mainScreen.receiveScreenInput(ENC_RIGHT);
-  delay(1*DEBUG_TIME_SCALE);
-  mainScreen.receiveScreenInput(ENC_LEFT);
-  delay(1*DEBUG_TIME_SCALE);
-  mainScreen.receiveScreenInput(ENC_PRESS); // Pin value 1 submitted
-  delay(1*DEBUG_TIME_SCALE);
-  mainScreen.receiveScreenInput(ENC_LEFT);
-  delay(1*DEBUG_TIME_SCALE);
-  mainScreen.receiveScreenInput(ENC_RIGHT);
-  delay(1*DEBUG_TIME_SCALE);
-  mainScreen.receiveScreenInput(ENC_PRESS); // Pin value 2 submitted
-  delay(1*DEBUG_TIME_SCALE);
-  mainScreen.receiveScreenInput(ENC_RIGHT);
-  delay(1*DEBUG_TIME_SCALE);
-  mainScreen.receiveScreenInput(ENC_RIGHT);
-  delay(1*DEBUG_TIME_SCALE);
-  mainScreen.receiveScreenInput(ENC_RIGHT);
-  delay(1*DEBUG_TIME_SCALE);
-  mainScreen.receiveScreenInput(ENC_PRESS); // Pin value 3 submitted
-  delay(4*DEBUG_TIME_SCALE);
-
-  // We are now about to submit pin, verify validity
-  uint8_t* pin = mainScreen.getInputPin();
-  Serial.print("Checking pin...");
-  if (pin[0] == 1 && pin[1] == 1 && pin[2] == 3)
-  {
-    Serial.println("Pin correct!");
-    mainScreen.pin_correct = true;
-  } else {
-    Serial.println("Pin incorrect!");
-  }
-
-  mainScreen.receiveScreenInput(ENC_PRESS); // Submit pin, go to btn launch screen
-  delay(4*DEBUG_TIME_SCALE);
-  mainScreen.receiveScreenInput(ENC_PRESS); // Go back to menu screen
-  delay(2*DEBUG_TIME_SCALE);
- 
-  Serial.println("Wrote!");
-
-  mainScreen.clearDisplay();
+  testFullLaunch(mainScreen);
 
   delay(2000);
 }

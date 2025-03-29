@@ -115,6 +115,7 @@ class MainScreen {
         Screen currentScreen = MENU;
         bool data_screen_enabled;
         bool rocket_armed = false;
+        bool key_inserted = false;
         bool pin_correct = false;
         ScreenNavInfo menuOptions[4];
         ScreenNavInfo launchOptions[2];

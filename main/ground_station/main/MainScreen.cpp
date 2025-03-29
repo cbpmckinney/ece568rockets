@@ -124,6 +124,10 @@ void MainScreen::showLaunchSeq() {
     currentScreen = LAUNCH_SEQ;
 
     clearDisplay();
+
+    // Reset index to allow pin entering again
+    screenCursorIndexes.launchSeqIndex = 0;
+
     display.setTextSize(2);
     display.setTextColor(SH110X_WHITE);
     display.setCursor(0,0);
@@ -396,7 +400,7 @@ void MainScreen::receiveScreenInput(UserInput input) {
                     //
                     // This can be done by checking if user is about to ENC_PRESS to submit pin, verifying pin,
                     // then setting pin_correct to true/false.
-                    if (pin_correct) {
+                    if (pin_correct && key_inserted) {
                         Serial.print("Jumping to: "); Serial.println(targetScreen); // RED BUTTON LAUNCH SCREEN
                         jumpToScreen(targetScreen);
                     } else {
