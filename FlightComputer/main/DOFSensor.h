@@ -1,13 +1,7 @@
 #pragma once
 #include <cstdint>
 #include "main.h"
-
-typedef struct per10mData
-{
-    uint8_t tenMeterFloor;
-    float   data;
-} per10mData_t;
-
+#include "Sensor.h"
 
 class DOFSensor 
 {

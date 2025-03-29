@@ -24,13 +24,6 @@ unsigned long timeOfLastPoll;
 
 sensor_status_t DOFSensor::initialize()
 {
-
-  #ifdef DEBUGDOF
-    Serial.begin(115200);
-
-    while (!Serial) delay(10);  // wait for serial port to open!
-  #endif
-
     if (!bno.begin())
     {
         Serial.print("No BNO055 detected");
@@ -47,15 +40,42 @@ sensor_status_t DOFSensor::setInitialDataValues()
 
 sensor_status_t DOFSensor::collectData()
 {
-    sensors_event_t orientationData , linearAccelData;
-    bno.getEvent(&orientationData, Adafruit_BNO055::VECTOR_EULER);
-    //  bno.getEvent(&angVelData, Adafruit_BNO055::VECTOR_GYROSCOPE);
-    bno.getEvent(&linearAccelData, Adafruit_BNO055::VECTOR_LINEARACCEL);
+    //
+  unsigned long tStart = micros();
+  sensors_event_t orientationData , linearAccelData;
+  bno.getEvent(&orientationData, Adafruit_BNO055::VECTOR_EULER);
+  //  bno.getEvent(&angVelData, Adafruit_BNO055::VECTOR_GYROSCOPE);
+  bno.getEvent(&linearAccelData, Adafruit_BNO055::VECTOR_LINEARACCEL);
 
-    xPos = xPos + ACCEL_POS_TRANSITION * linearAccelData.acceleration.x;
-    yPos = yPos + ACCEL_POS_TRANSITION * linearAccelData.acceleration.y;
+  xPos = xPos + ACCEL_POS_TRANSITION * linearAccelData.acceleration.x;
+  yPos = yPos + ACCEL_POS_TRANSITION * linearAccelData.acceleration.y;
 
-    // velocity of sensor in the direction it's facing
-    headingVel = ACCEL_VEL_TRANSITION * linearAccelData.acceleration.x / cos(DEG_2_RAD * orientationData.orientation.x);
-    return SENSOR_WORKING;
+  // velocity of sensor in the direction it's facing
+  headingVel = ACCEL_VEL_TRANSITION * linearAccelData.acceleration.x / cos(DEG_2_RAD * orientationData.orientation.x);
+
+  if (printCount * BNO055_SAMPLERATE_DELAY_MS >= PRINT_DELAY_MS) {
+    //enough iterations have passed that we can print the latest data
+    Serial.print("Heading: ");
+    Serial.println(orientationData.orientation.x);
+    Serial.print("Position: ");
+    Serial.print(xPos);
+    Serial.print(" , ");
+    Serial.println(yPos);
+    Serial.print("Speed: ");
+    Serial.println(headingVel);
+    Serial.println("-------");
+
+    printCount = 0;
+  }
+  else {
+    printCount = printCount + 1;
+  }
+
+
+
+  while ((micros() - tStart) < (BNO055_SAMPLERATE_DELAY_MS * 1000))
+  {
+    //poll until the next sample is ready
+  }
+  return SENSOR_WORKING;
 }

@@ -1,5 +1,6 @@
 #include "main.h"
 #include "Sensor.h"
+#include "DOFSensor.h"
 
 #define DEBUG 1
 
@@ -16,7 +17,7 @@ void setup() {
 void loop() {
   static rocket_states_t currRocketState = BOOTUP;
   static sensorStatus statusByte;
-  static Sensor dofSensor;
+  static DOFSensor dofSensor;
   static Sensor altitude_sensor;
   static Sensor temperature_sensor;
   static Sensor gps;
