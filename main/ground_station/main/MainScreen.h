@@ -18,6 +18,7 @@ Chris Silman
 #include <Adafruit_SH110X.h>
 #include <Arduino.h>
 #include <memory>
+#include "Screen.h"
 
 // Enum that defines all possible user inputs
 enum UserInput {
@@ -27,45 +28,6 @@ enum UserInput {
     BIG_RED,
     KEY_ON,
     KEY_OFF
-};
-
-// Enum that defines all possible screens
-enum Screen {
-    MENU,
-    DATA,
-    LAUNCH,
-    LAUNCH_WAIT,
-    LAUNCH_SEQ,
-    LAUNCH_BIG_RED,
-    LAUNCH_WRONG_PIN,
-    SLEEP,
-    SETTINGS,
-    NONE
-};
-
-// Expected structure of local data
-struct LocalData {
-    int temp;
-    int humidity;
-    int altitude;
-    int pressure;
-    int gps; // temporary, likely will be an array
-};
-
-// Expected structure of rocket data
-struct RocketData {
-    int temp;
-    int humidity;
-    int altitude;
-    int pressure;
-    int gps; //temporary, likely will be an array
-    int absOrientation_EV;
-    int absOreintation_Q;
-    int angularVelocity;
-    int accelerationVector;
-    int magneticFieldStrengthVector;
-    int linearAccelerationVector;
-    int gravityVector;
 };
 
 // Represents the index at which the user was last on for screens that
@@ -83,7 +45,7 @@ struct ScreenCursorIndex {
 
     // Includes 0; 3 = 0, 1, 2, 3
     uint8_t menuMaxIndex = 3;
-    uint8_t dataMaxIndex = 0;
+    uint8_t dataMaxIndex = 2;
     uint8_t launchMaxIndex = 1;
     uint8_t launchWaitMaxIndex = 0;
     uint8_t launchSeqMaxIndex = 3;
@@ -113,11 +75,14 @@ class MainScreen {
         Adafruit_SH1107 display = Adafruit_SH1107(SCREEN_WIDTH, SCREEN_HEIGHT, &Wire, OLED_RESET, 1000000, 100000);
         ScreenCursorIndex screenCursorIndexes;
         Screen currentScreen = MENU;
-        bool data_screen_enabled;
+        bool data_screen_enabled = false;
         bool rocket_armed = false;
         bool key_inserted = false;
         bool pin_correct = false;
+        bool request_show_data = false;
+        Screen data_screen_requested = NONE;
         ScreenNavInfo menuOptions[4];
+        ScreenNavInfo dataOptions[3];
         ScreenNavInfo launchOptions[2];
         ScreenNavInfo launchWaitOptions[1];
         ScreenNavInfo launchSeqOptions[4];
@@ -129,14 +94,13 @@ class MainScreen {
         void initialize(uint8_t i2caddr);
         void clearDisplay();
         void showMenu();
+        void showDataScreen();
         void showLaunch();
         void showLaunchWait();
         void showLaunchSeq();
         void showLaunchBigRed();
         void showLaunchWrongPin();
         void jumpToScreen(Screen screen);
-        void updateLocalData(LocalData data);
-        void updateRocketData(RocketData data);
         void receiveScreenInput(UserInput input);
         void updateScreenCursor(uint8_t x_index, uint8_t y_index, uint8_t prev_x_index=255, uint8_t prev_y_index=255);
         void updatePinNumber(uint8_t x_index, uint8_t y_index, uint8_t value, uint8_t prev_value=255);

@@ -9,6 +9,63 @@ bool pinCorrect(uint8_t* pin) {
     }
 }
 
+void testDataScreen(MainScreen main_screen, AuxillaryScreen aux_screen) {
+    main_screen.showMenu();
+    delay(2*DEBUG_TIME_SCALE);
+
+    main_screen.receiveScreenInput(ENC_PRESS); // Data Screen
+    delay(2*DEBUG_TIME_SCALE);
+
+    main_screen.receiveScreenInput(ENC_PRESS); // Submit Local
+
+    if (main_screen.request_show_data && !aux_screen.data_screen_enabled) {
+        aux_screen.enableShowingData();
+    } else if (!main_screen.request_show_data) {
+        aux_screen.disableShowingData();
+    } // else maintain current state
+    aux_screen.requestScreen(main_screen.data_screen_requested);
+
+    delay(4*DEBUG_TIME_SCALE);
+
+    main_screen.receiveScreenInput(ENC_PRESS); // Data Screen
+    delay(1*DEBUG_TIME_SCALE);
+
+    main_screen.receiveScreenInput(ENC_RIGHT); // Select Rocket
+    delay(1*DEBUG_TIME_SCALE);
+
+    main_screen.receiveScreenInput(ENC_PRESS); // Submit Rocket
+
+    if (main_screen.request_show_data && !aux_screen.data_screen_enabled) {
+        aux_screen.enableShowingData();
+    } else if (!main_screen.request_show_data) {
+        aux_screen.disableShowingData();
+    } // else maintain current state
+    aux_screen.requestScreen(main_screen.data_screen_requested);
+
+    delay(4*DEBUG_TIME_SCALE);
+
+    main_screen.receiveScreenInput(ENC_PRESS); // Data Screen
+    delay(2*DEBUG_TIME_SCALE);
+
+    main_screen.receiveScreenInput(ENC_RIGHT); // Select None
+    delay(1*DEBUG_TIME_SCALE);
+
+    main_screen.receiveScreenInput(ENC_PRESS); // Submit None
+
+    if (main_screen.request_show_data && !aux_screen.data_screen_enabled) {
+        aux_screen.enableShowingData();
+    } else if (!main_screen.request_show_data) {
+        aux_screen.disableShowingData();
+    } // else maintain current state
+    aux_screen.requestScreen(main_screen.data_screen_requested);
+    
+    delay(4*DEBUG_TIME_SCALE);
+
+    main_screen.clearDisplay();
+    aux_screen.clearDisplay();
+
+}
+
 /* Simulates screen inputs */
 void testFullLaunch(MainScreen screen) {
     screen.showMenu();

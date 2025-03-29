@@ -38,6 +38,11 @@ void MainScreen::initialize(uint8_t i2caddr) {
     menuOptions[2] = {SLEEP, 7, 2};
     menuOptions[3] = {SETTINGS, 7, 3};
 
+    // Set up dataOptions
+    dataOptions[0] = {LOCAL, 5, 4}; // LOCAL
+    dataOptions[1] = {ROCKET, 6, 5}; // ROCKET
+    dataOptions[2] = {NONE, 5, 6};
+
     // Set up launchOptions
     launchOptions[0] = {LAUNCH_WAIT, 3, 4}; // Y
     launchOptions[1] = {MENU, 6, 4}; // N
@@ -79,6 +84,25 @@ void MainScreen::showMenu() {
     display.println(F("SETTINGS"));
     updateScreenCursor(menuOptions[screenCursorIndexes.menuIndex].cursor_x_index, 
                         menuOptions[screenCursorIndexes.menuIndex].cursor_y_index);
+    display.display();
+}
+
+void MainScreen::showDataScreen() {
+    currentScreen = DATA;
+
+    clearDisplay();
+    display.setTextSize(2);
+    display.setTextColor(SH110X_WHITE);
+    drawCentreString("SHOW", 64, 0);
+    drawCentreString("DATA?", 88, 16);
+    display.setCursor(0,64);
+    display.println(F("LOCAL"));
+    display.setCursor(0,80);
+    display.println(F("ROCKET"));
+    display.setCursor(0,96);
+    display.println(F("NONE"));
+    updateScreenCursor(dataOptions[screenCursorIndexes.dataIndex].cursor_x_index, 
+                        dataOptions[screenCursorIndexes.dataIndex].cursor_y_index);
     display.display();
 }
 
@@ -199,6 +223,7 @@ void MainScreen::jumpToScreen(Screen screen) {
             break;
         case DATA:
             Serial.println("Jumped to DATA");
+            showDataScreen();
             break;
         case LAUNCH:
             Serial.println("Jumped to LAUNCH");
@@ -232,18 +257,6 @@ void MainScreen::jumpToScreen(Screen screen) {
       }
 }
 
-void MainScreen::updateLocalData(LocalData data) {
-    if (data_screen_enabled) {
-        Serial.println("Showing local data");
-    }
-}
-
-void MainScreen::updateRocketData(RocketData data) {
-    if (data_screen_enabled) {
-        Serial.println("Showing rocket data");
-    }
-}
-
 void MainScreen::receiveScreenInput(UserInput input) {
     Serial.println("Called receiveScreenInput");
     uint8_t* cursorIndex = NULL;
@@ -264,6 +277,7 @@ void MainScreen::receiveScreenInput(UserInput input) {
             case DATA:
                 cursorIndex = &screenCursorIndexes.dataIndex;
                 maxScreenIndex = &screenCursorIndexes.dataMaxIndex;
+                screenNavInfo = dataOptions;
                 break;
             case LAUNCH:
                 cursorIndex = &screenCursorIndexes.launchIndex;
@@ -374,7 +388,7 @@ void MainScreen::receiveScreenInput(UserInput input) {
         case ENC_PRESS:
             targetScreen = screenNavInfo[*cursorIndex].nextScreen;
 
-            if (currentScreen != LAUNCH_SEQ) 
+            if (currentScreen != LAUNCH_SEQ and currentScreen != DATA) 
             {
                 Serial.print("Jumping to: "); Serial.println(targetScreen);
                 jumpToScreen(targetScreen);
@@ -408,6 +422,15 @@ void MainScreen::receiveScreenInput(UserInput input) {
                         jumpToScreen(LAUNCH_WRONG_PIN);
                     }
                 }
+            } else if (currentScreen == DATA) {
+                if (targetScreen == NONE) {
+                    request_show_data = false;
+                } else {
+                    request_show_data = true;
+                }
+
+                data_screen_requested = targetScreen;
+                jumpToScreen(MENU);
             }
             break;
         case BIG_RED:

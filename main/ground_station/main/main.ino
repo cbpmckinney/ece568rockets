@@ -31,7 +31,8 @@ void initializeScreens() {
   mainScreen.initialize(0x3D);
   auxScreen.initialize(0x3C);
 
-  testFullLaunch(mainScreen);
+  //testDataScreen(mainScreen, auxScreen);
+  //testFullLaunch(mainScreen);
 
   delay(2000);
 }
