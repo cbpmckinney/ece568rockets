@@ -57,6 +57,11 @@ void initializeScreens() {
   auxScreen.receiveScreenInput(ENC_PRESS);
   delay(2000);
   auxScreen.receiveScreenInput(ENC_PRESS);
+  delay(2000);
+  auxScreen.receiveScreenInput(ENC_PRESS);
+  delay(1000);
+  auxScreen.clearDisplay();
+
   //mainScreen.showMenu();
   /*
   mainScreen.receiveScreenInput(ENC_RIGHT);

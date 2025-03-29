@@ -50,6 +50,9 @@ void MainScreen::initialize(uint8_t i2caddr) {
     launchSeqOptions[1] = {NONE, 4, 5, 7, 10}; // NUM
     launchSeqOptions[2] = {NONE, 6, 5, 11, 10}; // NUM
     launchSeqOptions[3] = {LAUNCH_BIG_RED, 5, 7}; // Submit
+
+    // Set up launchWrongPinOptions
+    launchWrongPinOptions[0] = {MENU, 5, 6}; // MENU
 }
 
 void MainScreen::clearDisplay() {
@@ -108,8 +111,8 @@ void MainScreen::showLaunchWait() {
         display.println(F("Rckt must be ARMed  to initiate a launch sequence."));
         display.setCursor(32,96);
         display.println(F("MENU"));
-        updateScreenCursor(launchWaitOptions[screenCursorIndexes.launchWaitIndex].cursor_x_index, 
-                            launchWaitOptions[screenCursorIndexes.launchWaitIndex].cursor_y_index);
+        updateScreenCursor(launchWrongPinOptions[screenCursorIndexes.launchWrongPinIndex].cursor_x_index, 
+                            launchWrongPinOptions[screenCursorIndexes.launchWrongPinIndex].cursor_y_index);
         display.display();
     }
 }
@@ -150,7 +153,20 @@ void MainScreen::showLaunchSeq() {
     display.display();
 }
 
+void MainScreen::showLaunchWrongPin() {
+    currentScreen = LAUNCH_WRONG_PIN;
 
+    clearDisplay();
+    display.setTextSize(2);
+    display.setTextColor(SH110X_WHITE);
+    display.setCursor(0,0);
+    display.println(F("Incorrect pin"));
+    display.setCursor(32,96);
+    display.println(F("MENU"));
+    updateScreenCursor(launchWrongPinOptions[screenCursorIndexes.launchWrongPinIndex].cursor_x_index, 
+                        launchWrongPinOptions[screenCursorIndexes.launchWrongPinIndex].cursor_y_index);
+    display.display();
+}
 
 void MainScreen::jumpToScreen(Screen screen) {
     Serial.print("In jump to screen, going to: "); Serial.println(screen);
@@ -180,6 +196,7 @@ void MainScreen::jumpToScreen(Screen screen) {
             break;
         case LAUNCH_WRONG_PIN:
             Serial.println("Jumped to LAUNCH WRONG PIN");
+            showLaunchWrongPin();
             //TODO
             break;
         case SETTINGS:
@@ -241,6 +258,16 @@ void MainScreen::receiveScreenInput(UserInput input) {
                 maxScreenIndex = &screenCursorIndexes.launchSeqMaxIndex;
                 screenNavInfo = launchSeqOptions;
                 break;
+            case LAUNCH_BIG_RED:
+                cursorIndex = &screenCursorIndexes.launchBigRedIndex;
+                maxScreenIndex = &screenCursorIndexes.launchBigRedMaxIndex;
+                screenNavInfo = launchSeqOptions;
+                break;
+            case LAUNCH_WRONG_PIN:
+                cursorIndex = &screenCursorIndexes.launchWrongPinIndex;
+                maxScreenIndex = &screenCursorIndexes.launchWrongPinMaxIndex;
+                screenNavInfo = launchSeqOptions;
+                break;
             case SLEEP:
                 cursorIndex = &screenCursorIndexes.sleepIndex;
                 maxScreenIndex = &screenCursorIndexes.sleepMaxIndex;
@@ -261,9 +288,7 @@ void MainScreen::receiveScreenInput(UserInput input) {
         case ENC_LEFT:
             // if encoder turned left, decrement index by one and update cursor location
             
-                if (currentScreen == MENU || 
-                    currentScreen == LAUNCH || 
-                    currentScreen == LAUNCH_WAIT) 
+                if (currentScreen != LAUNCH_SEQ) 
                 {
                     if (*cursorIndex > 0) {
                     prev_x_index = screenNavInfo[*cursorIndex].cursor_x_index;
@@ -294,9 +319,7 @@ void MainScreen::receiveScreenInput(UserInput input) {
         case ENC_RIGHT:
             // if encoder turned right, increment index by one and update cursor location
             
-                if (currentScreen == MENU || 
-                    currentScreen == LAUNCH || 
-                    currentScreen == LAUNCH_WAIT) 
+                if (currentScreen != LAUNCH_SEQ) 
                 {
                     if (*cursorIndex < *maxScreenIndex) {
                         prev_x_index = screenNavInfo[*cursorIndex].cursor_x_index;
@@ -329,9 +352,7 @@ void MainScreen::receiveScreenInput(UserInput input) {
         case ENC_PRESS:
             targetScreen = screenNavInfo[*cursorIndex].nextScreen;
 
-            if (currentScreen == MENU || 
-                currentScreen == LAUNCH || 
-                currentScreen == LAUNCH_WAIT) 
+            if (currentScreen != LAUNCH_SEQ) 
             {
                 Serial.print("Jumping to: "); Serial.println(targetScreen);
                 jumpToScreen(targetScreen);
@@ -381,7 +402,7 @@ void MainScreen::receiveScreenInput(UserInput input) {
             return;
       }
       
-    Serial.println("Called receiveScreenInput\n");
+    Serial.println("End receiveScreenInput\n");
 }
 
 void MainScreen::updateScreenCursor(uint8_t x_index, uint8_t y_index, uint8_t prev_x_index, uint8_t prev_y_index) {

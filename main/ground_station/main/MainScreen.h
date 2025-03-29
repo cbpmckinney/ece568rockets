@@ -76,6 +76,8 @@ struct ScreenCursorIndex {
     uint8_t launchIndex = 0;
     uint8_t launchWaitIndex = 0;
     uint8_t launchSeqIndex = 0;
+    uint8_t launchBigRedIndex = 0;
+    uint8_t launchWrongPinIndex = 0;
     uint8_t sleepIndex = 0;
     uint8_t settingsIndex = 0;
 
@@ -85,6 +87,8 @@ struct ScreenCursorIndex {
     uint8_t launchMaxIndex = 1;
     uint8_t launchWaitMaxIndex = 0;
     uint8_t launchSeqMaxIndex = 3;
+    uint8_t launchBigRedMaxIndex = 0;
+    uint8_t launchWrongPinMaxIndex = 0;
     uint8_t sleepMaxIndex = 0;
     uint8_t settingsMaxIndex = 0;
 };
@@ -116,6 +120,7 @@ class MainScreen {
         ScreenNavInfo launchOptions[2];
         ScreenNavInfo launchWaitOptions[1];
         ScreenNavInfo launchSeqOptions[4];
+        ScreenNavInfo launchWrongPinOptions[1];
         uint8_t pin[3] = {0, 0, 0};
 
         // CLASS METHODS
@@ -125,6 +130,7 @@ class MainScreen {
         void showLaunch();
         void showLaunchWait();
         void showLaunchSeq();
+        void showLaunchWrongPin();
         void jumpToScreen(Screen screen);
         void updateLocalData(LocalData data);
         void updateRocketData(RocketData data);
