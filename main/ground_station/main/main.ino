@@ -18,8 +18,8 @@ William Li
 #define PIN_VALUE_2 1
 #define PIN_VALUE_3 3
 
-#define ROTARY_PIN_A 27
-#define ROTARY_PIN_B 28
+#define ROTARY_PIN_B 27
+#define ROTARY_PIN_A 28
 
 enum STATE
 {
@@ -58,7 +58,7 @@ void setup() {
 
   initializeScreens();
 
-  encoder = new RotaryEncoder(ROTARY_PIN_A, ROTARY_PIN_B, RotaryEncoder::LatchMode::TWO03);
+  encoder = new RotaryEncoder(ROTARY_PIN_B, ROTARY_PIN_A, RotaryEncoder::LatchMode::TWO03);
   attachInterrupt(digitalPinToInterrupt(ROTARY_PIN_A), checkEncoderPosition, CHANGE);
   attachInterrupt(digitalPinToInterrupt(ROTARY_PIN_B), checkEncoderPosition, CHANGE);
 }
@@ -67,6 +67,7 @@ void loop() {
   // Switch, only one state processed per main operating loop
 
   switch(state) {
+    // INITIALIZE---------------------------------------
     case INITIALIZE:
       state = CONN_WAIT;
       break;
@@ -76,6 +77,7 @@ void loop() {
       state = SAFE;
       break;
 
+    // SAFE---------------------------------------
     case SAFE:
       // Check if ARM message received
       /*
@@ -91,23 +93,12 @@ void loop() {
       // If data screen enabled
       updateDataDisplay();
 
-      // Read Encoder Value
-      encoder->tick();
-
-      newPos = encoder->getPosition();
-      if (pos != newPos && abs(abs(pos) - abs(newPos)) >= 2) {
-        Serial.print("pos:");
-        Serial.print(newPos);
-        Serial.print(" dir:");
-        Serial.println((int)(encoder->getDirection()));
-        pos = newPos;
-      }
-
       // Process user input
       processUserInput();
 
       break;
 
+    // ARM---------------------------------------
     case ARM:
       if (isKeyInserted()) {
         mainScreen.key_inserted = true;
@@ -135,7 +126,7 @@ void loop() {
       // Process user input
       processUserInput();
       
-
+    // PRIME---------------------------------------
     case PRIME:
       // Make big red button glow
 
@@ -156,6 +147,8 @@ void initializeScreens() {
 
   mainScreen.initialize(0x3D);
   auxScreen.initialize(0x3C);
+
+  mainScreen.showMenu();
 
   //testFullLaunch(mainScreen);
   //testDataScreen(mainScreen, auxScreen);
@@ -191,6 +184,28 @@ void processUserInput() {
 
   // It will be stored in some class that has the last state read.
   // Input will be set to NONE after.
+  // Read Encoder Value
+  encoder->tick();
+
+  newPos = encoder->getPosition();
+  if (pos != newPos && abs(abs(pos) - abs(newPos)) >= 2) {
+    Serial.print("pos:");
+    Serial.print(newPos);
+    Serial.print(" dir:");
+    Serial.println((int)(encoder->getDirection()));
+    pos = newPos;
+  }
+
+  int direction = (int)(encoder->getDirection());
+
+  if (direction == -1) {
+    mainScreen.receiveScreenInput(ENC_LEFT);
+  } else if (direction == 1) {
+    mainScreen.receiveScreenInput(ENC_RIGHT);
+  }
+
+
+
 }
 
 bool validatePin(uint8_t* pin) {
