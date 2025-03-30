@@ -27,6 +27,8 @@ void AuxillaryScreen::clearDisplay() {
 }
 
 void AuxillaryScreen::showLocalData() {
+    currentScreen = LOCAL;
+
     clearDisplay();
     display.setTextSize(1);
     display.setTextColor(SH110X_WHITE);
@@ -46,6 +48,8 @@ void AuxillaryScreen::showLocalData() {
 }
 
 void AuxillaryScreen::showRocketData() {
+    currentScreen = ROCKET;
+
     clearDisplay();
     display.setTextSize(1);
     display.setTextColor(SH110X_WHITE);
@@ -74,6 +78,7 @@ void AuxillaryScreen::jumpToScreen(Screen screen) {
             showRocketData();
             break;
         case NONE:
+            currentScreen = NONE;
             clearDisplay();
             break;
         default:

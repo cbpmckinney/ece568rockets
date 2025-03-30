@@ -20,6 +20,10 @@ William Li
 
 #define ROTARY_PIN_B 27
 #define ROTARY_PIN_A 28
+#define ROTARY_BTN 11
+
+// How much time needs to pass before registering another button press, in ms
+#define BUTTON_PRESS_LIMIT 500
 
 enum STATE
 {
@@ -44,10 +48,13 @@ LocalData groundStationData;
 RocketData receivedRocketData;
 uint8_t* pin = NULL;
 
+unsigned long lastButtonPressTime = 0;
+
 // Encoder
 RotaryEncoder *encoder = nullptr;
 int pos = 0;
-int newPos;
+int newPos = 0;
+int previousButtonState = 0;
 
 void setup() {
   state = INITIALIZE;
@@ -157,10 +164,10 @@ void initializeScreens() {
 }
 
 void updateDataDisplay() {
-  if (mainScreen.request_show_data && !auxScreen.data_screen_enabled) {
+  if (mainScreen.request_show_data == true && auxScreen.data_screen_enabled == false) {
       auxScreen.enableShowingData();
   } 
-  else if (!mainScreen.request_show_data) 
+  else if (mainScreen.request_show_data == false) 
   {
     if (auxScreen.currentScreen != NONE) {
       auxScreen.disableShowingData();
@@ -171,11 +178,15 @@ void updateDataDisplay() {
     // else maintain current state
   }
 
-    if (auxScreen.data_screen_enabled) {
-      auxScreen.storedLocalData = groundStationData;
-      auxScreen.storedRocketData = receivedRocketData;
+  if (auxScreen.data_screen_enabled) {
+    auxScreen.storedLocalData = groundStationData;
+    auxScreen.storedRocketData = receivedRocketData;
+    if (auxScreen.currentScreen != mainScreen.data_screen_requested) {
+      Serial.print("Aux: ");Serial.println(auxScreen.currentScreen);
+      Serial.print("Main: ");Serial.println(mainScreen.data_screen_requested);
       auxScreen.requestScreen(mainScreen.data_screen_requested);
     }
+  }
 }
 
 void processUserInput() {
@@ -188,6 +199,8 @@ void processUserInput() {
   encoder->tick();
 
   int direction = 0;
+  // Read button
+  int buttonState = digitalRead(ROTARY_BTN);
 
   newPos = encoder->getPosition();
   if (pos != newPos && abs(abs(pos) - abs(newPos)) >= 2) {
@@ -199,11 +212,25 @@ void processUserInput() {
     pos = newPos;
   }
 
-  if (direction == -1) {
+  if (direction == -1 && buttonState == 0) {
     mainScreen.receiveScreenInput(ENC_LEFT);
-  } else if (direction == 1) {
+  } else if (direction == 1 && buttonState == 0) {
     mainScreen.receiveScreenInput(ENC_RIGHT);
+  } 
+  else if (buttonState == 1 && previousButtonState == 0) 
+  {
+    // Require the button state to have changed (cannot hold)
+    if (millis() - lastButtonPressTime > BUTTON_PRESS_LIMIT)
+    {
+      // Reduce effect of rapid pressing or spurious inputs.
+      Serial.println("Received button press");
+      mainScreen.receiveScreenInput(ENC_PRESS);
+      lastButtonPressTime = millis();
+    }
   }
+ 
+  previousButtonState = buttonState;
+  
 }
 
 bool validatePin(uint8_t* pin) {
