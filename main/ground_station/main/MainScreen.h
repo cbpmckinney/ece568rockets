@@ -81,7 +81,7 @@ class MainScreen {
         bool ready_to_submit_pin = true;
         bool pin_correct = false;
         bool request_show_data = false;
-        bool primed = false;
+        bool prime_permissive = false;
         Screen data_screen_requested = NONE;
         ScreenNavInfo menuOptions[4];
         ScreenNavInfo dataOptions[3];

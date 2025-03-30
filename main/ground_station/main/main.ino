@@ -8,6 +8,7 @@ William Li
 *********************************************************************/
 
 #include <Adafruit_SH110X.h>
+#include <RotaryEncoder.h>
 #include "MainScreen.h"
 #include "AuxillaryScreen.h"
 #include "OLEDScreenTests.h"
@@ -16,6 +17,9 @@ William Li
 #define PIN_VALUE_1 2
 #define PIN_VALUE_2 1
 #define PIN_VALUE_3 3
+
+#define ROTARY_PIN_A 27
+#define ROTARY_PIN_B 28
 
 enum STATE
 {
@@ -30,11 +34,20 @@ enum STATE
   ERR
 };
 
+// Ground station
 STATE state = ERR;
+
+// Screens
 MainScreen mainScreen = MainScreen();
 AuxillaryScreen auxScreen = AuxillaryScreen();
 LocalData groundStationData;
 RocketData receivedRocketData;
+uint8_t* pin = NULL;
+
+// Encoder
+RotaryEncoder *encoder = nullptr;
+int pos = 0;
+int newPos;
 
 void setup() {
   state = INITIALIZE;
@@ -45,66 +58,9 @@ void setup() {
 
   initializeScreens();
 
-}
-
-void initializeScreens() {
-  Serial.println("Initializing screens!");
-
-  mainScreen.initialize(0x3D);
-  auxScreen.initialize(0x3C);
-
-  //testFullLaunch(mainScreen);
-  //testDataScreen(mainScreen, auxScreen);
-
-  delay(2000);
-}
-
-void updateDataDisplay() {
-  if (main_screen.request_show_data && !aux_screen.data_screen_enabled) {
-        aux_screen.enableShowingData();
-    } 
-    else if (!main_screen.request_show_data) 
-    {
-        aux_screen.disableShowingData();
-    } else {
-      // else maintain current state
-    }
-
-    if (aux_screen.data_screen_enabled) {
-      aux_screen.storedLocalData = groundStationData;
-      aux_screen.storedRocketData = receivedRocketData;
-      aux_screen.requestScreen(main_screen.data_screen_requested);
-    }
-
-    
-}
-
-void processUserInput() {
-  // Encoder input should be read in when read, but only
-  // processed at set points through this function.
-
-  // It will be stored in some class that has the last state read.
-  // Input will be set to NONE after.
-}
-
-bool pinCorrect(uint8_t* pin) {
-    // Pin cannot be zeros, this is default
-    if (pin[0] == 0 && pin[1] == 0 && pin[2] == 0) 
-    {
-      // INVALID PIN VALUE
-      return false;
-    }
-
-    if (pin[0] == PIN_VALUE_1 && pin[1] == PIN_VALUE_2 && pin[2] == PIN_VALUE_3)
-    {
-        return true;
-    } else {
-        return false;
-    }
-}
-
-bool isKeyInserted() {
-  return false
+  encoder = new RotaryEncoder(ROTARY_PIN_A, ROTARY_PIN_B, RotaryEncoder::LatchMode::TWO03);
+  attachInterrupt(digitalPinToInterrupt(ROTARY_PIN_A), checkEncoderPosition, CHANGE);
+  attachInterrupt(digitalPinToInterrupt(ROTARY_PIN_B), checkEncoderPosition, CHANGE);
 }
 
 void loop() {
@@ -133,7 +89,19 @@ void loop() {
       */
 
       // If data screen enabled
-      updateDataDisplay()
+      updateDataDisplay();
+
+      // Read Encoder Value
+      encoder->tick();
+
+      newPos = encoder->getPosition();
+      if (pos != newPos && abs(abs(pos) - abs(newPos)) >= 2) {
+        Serial.print("pos:");
+        Serial.print(newPos);
+        Serial.print(" dir:");
+        Serial.println((int)(encoder->getDirection()));
+        pos = newPos;
+      }
 
       // Process user input
       processUserInput();
@@ -141,8 +109,6 @@ void loop() {
       break;
 
     case ARM:
-      uint8_t* pin = NULL;
-
       if (isKeyInserted()) {
         mainScreen.key_inserted = true;
       } 
@@ -156,13 +122,13 @@ void loop() {
         // changes cannot be made now
         pin = mainScreen.getInputPin();
 
-        if (pinCorrect(pin)) {
-          screen.pin_correct = true;
+        if (validatePin(pin)) {
+          mainScreen.pin_correct = true;
         }
       }
 
-      if (mainScreen.primed) {
-        STATE = PRIME;
+      if (mainScreen.prime_permissive) {
+        state = PRIME;
         // Update LED on ground station to signify rocket is primed
       }
 
@@ -178,4 +144,71 @@ void loop() {
 
   }
 
+}
+
+void checkEncoderPosition()
+{
+  encoder->tick(); // just call tick() to check the state.
+}
+
+void initializeScreens() {
+  Serial.println("Initializing screens!");
+
+  mainScreen.initialize(0x3D);
+  auxScreen.initialize(0x3C);
+
+  //testFullLaunch(mainScreen);
+  //testDataScreen(mainScreen, auxScreen);
+
+  delay(2000);
+}
+
+void updateDataDisplay() {
+  if (mainScreen.request_show_data && !auxScreen.data_screen_enabled) {
+      auxScreen.enableShowingData();
+  } 
+  else if (!mainScreen.request_show_data) 
+  {
+    if (auxScreen.currentScreen != NONE) {
+      auxScreen.disableShowingData();
+    }
+  } 
+  else 
+  {
+    // else maintain current state
+  }
+
+    if (auxScreen.data_screen_enabled) {
+      auxScreen.storedLocalData = groundStationData;
+      auxScreen.storedRocketData = receivedRocketData;
+      auxScreen.requestScreen(mainScreen.data_screen_requested);
+    }
+}
+
+void processUserInput() {
+  // Encoder input should be read in when read, but only
+  // processed at set points through this function.
+
+  // It will be stored in some class that has the last state read.
+  // Input will be set to NONE after.
+}
+
+bool validatePin(uint8_t* pin) {
+    // Pin cannot be zeros, this is default
+    if (pin[0] == 0 && pin[1] == 0 && pin[2] == 0) 
+    {
+      // INVALID PIN VALUE
+      return false;
+    }
+
+    if (pin[0] == PIN_VALUE_1 && pin[1] == PIN_VALUE_2 && pin[2] == PIN_VALUE_3)
+    {
+        return true;
+    } else {
+        return false;
+    }
+}
+
+bool isKeyInserted() {
+  return false;
 }

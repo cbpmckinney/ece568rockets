@@ -405,7 +405,7 @@ void MainScreen::receiveScreenInput(UserInput input) {
                                         prev_x_index, 
                                         prev_y_index);
 
-                    if (*cursorIndex == maxScreenIndex) {
+                    if (*cursorIndex == *maxScreenIndex) {
                         // Ready to submit
                         ready_to_submit_pin = true;
                     }
@@ -423,7 +423,7 @@ void MainScreen::receiveScreenInput(UserInput input) {
                     if (pin_correct && key_inserted) {
                         Serial.print("Jumping to: "); Serial.println(targetScreen); // RED BUTTON LAUNCH SCREEN
                         jumpToScreen(targetScreen);
-                        primed = true;
+                        prime_permissive = true;
                     } else {
                         Serial.print("Jumping to: "); Serial.println(LAUNCH_WRONG_PIN); // RED BUTTON LAUNCH SCREEN
                         jumpToScreen(LAUNCH_WRONG_PIN);
