@@ -187,25 +187,23 @@ void processUserInput() {
   // Read Encoder Value
   encoder->tick();
 
+  int direction = 0;
+
   newPos = encoder->getPosition();
   if (pos != newPos && abs(abs(pos) - abs(newPos)) >= 2) {
     Serial.print("pos:");
     Serial.print(newPos);
     Serial.print(" dir:");
-    Serial.println((int)(encoder->getDirection()));
+    direction = (int)(encoder->getDirection());
+    Serial.println(direction);
     pos = newPos;
   }
-
-  int direction = (int)(encoder->getDirection());
 
   if (direction == -1) {
     mainScreen.receiveScreenInput(ENC_LEFT);
   } else if (direction == 1) {
     mainScreen.receiveScreenInput(ENC_RIGHT);
   }
-
-
-
 }
 
 bool validatePin(uint8_t* pin) {
