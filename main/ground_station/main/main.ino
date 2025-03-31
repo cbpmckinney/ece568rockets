@@ -107,7 +107,7 @@ void loop() {
 
     // ARM---------------------------------------
     case ARM:
-      if (isKeyInserted()) {
+      if (keyInserted()) {
         mainScreen.key_inserted = true;
       } 
       else
@@ -126,8 +126,12 @@ void loop() {
       }
 
       if (mainScreen.prime_permissive) {
+        // User (screen) gave go-ahead on priming rocket.
+        // Send message to rocket signifying ground station ready to PRIME
+        //  *requires a response back
+        //  Update LED on ground station to signify rocket is primed
+        // Make big red button glow
         state = PRIME;
-        // Update LED on ground station to signify rocket is primed
       }
 
       // Process user input
@@ -135,7 +139,7 @@ void loop() {
       
     // PRIME---------------------------------------
     case PRIME:
-      // Make big red button glow
+      
 
       processUserInput();
 
@@ -249,6 +253,6 @@ bool validatePin(uint8_t* pin) {
     }
 }
 
-bool isKeyInserted() {
+bool keyInserted() {
   return false;
 }
