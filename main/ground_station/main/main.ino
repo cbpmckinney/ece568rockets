@@ -139,19 +139,21 @@ void loop() {
       
     // PRIME---------------------------------------
     case PRIME:
-      
+      Serial.println("PRIME");
 
       processUserInput();
 
     case FIRE:
-
+      Serial.println("FIRE");
       // processUserInput();?
 
     case COLLECT:
+      Serial.println("COLLECT");
       // processUserInput();?
       // Force data screen?
 
     case RECOVERY:
+      Serial.println("RECOVERY");
 
       // processUserInput();?
       // Update AUX screen with coordinates and arrow?
