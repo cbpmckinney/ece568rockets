@@ -102,14 +102,75 @@ void AuxillaryScreen::requestScreen(Screen targetScreen) {
     }
 }
 
-void AuxillaryScreen::updateLocalData(LocalData data) {
-    if (data_screen_enabled) {
-        Serial.println("Showing local data");
-    }
+void AuxillaryScreen::refreshDataPoint(int old_data, int new_data, uint8_t index_x, uint8_t index_y, const char* message) {
+    display.setTextColor(SH110X_BLACK);
+    display.setCursor(index_x,index_y);
+    display.print(F(message)); display.println(old_data);
+    display.setTextColor(SH110X_WHITE);
+    display.setCursor(index_x,index_y);
+    display.print(F(message)); display.println(new_data);
 }
 
-void AuxillaryScreen::updateRocketData(RocketData data) {
+void AuxillaryScreen::updateLocalData(LocalData input_data) {
     if (data_screen_enabled) {
-        Serial.println("Showing rocket data");
+        Serial.println("Showing local data");
+        // Find what data has actually updated since last update
+        if (storedLocalData.temp !=  input_data.temp) {
+            refreshDataPoint(storedLocalData.temp, input_data.temp, 0, 8, "Temp (F): ");
+            storedLocalData.temp = input_data.temp;
+        }
+
+        if (storedLocalData.humidity != input_data.humidity) {
+            refreshDataPoint(storedLocalData.humidity, input_data.humidity, 0, 16, "Humidity: ");
+            storedLocalData.humidity = input_data.humidity;
+        }
+
+        if (storedLocalData.altitude !=input_data.altitude) {
+            refreshDataPoint(storedLocalData.altitude, input_data.altitude, 0, 24, "Altitude: ");
+            storedLocalData.altitude =input_data.altitude;
+        }
+
+        if (storedLocalData.pressure != input_data.pressure) {
+            refreshDataPoint(storedLocalData.pressure, input_data.pressure, 0, 32, "Pressure: ");
+            storedLocalData.pressure = input_data.pressure;
+        }
+
+        if (storedLocalData.gps != input_data.gps) {
+            refreshDataPoint(storedLocalData.gps, input_data.gps, 0, 40, "GPS: ");
+            storedLocalData.gps = input_data.gps;
+        }
     }
+    display.display();
+}
+
+void AuxillaryScreen::updateRocketData(RocketData input_data) {
+    if (data_screen_enabled) {
+        Serial.println("Showing local data");
+        // Find what data has actually updated since last update
+        if (storedLocalData.temp !=  input_data.temp) {
+            refreshDataPoint(storedLocalData.temp, input_data.temp, 0, 8, "Temp (F): ");
+            storedLocalData.temp = input_data.temp;
+        }
+
+        if (storedLocalData.humidity != input_data.humidity) {
+            refreshDataPoint(storedLocalData.humidity, input_data.humidity, 0, 16, "Humidity: ");
+            storedLocalData.humidity = input_data.humidity;
+        }
+
+        if (storedLocalData.altitude !=input_data.altitude) {
+            refreshDataPoint(storedLocalData.altitude, input_data.altitude, 0, 24, "Altitude: ");
+            storedLocalData.altitude =input_data.altitude;
+        }
+
+        if (storedLocalData.pressure != input_data.pressure) {
+            refreshDataPoint(storedLocalData.pressure, input_data.pressure, 0, 32, "Pressure: ");
+            storedLocalData.pressure = input_data.pressure;
+        }
+
+        if (storedLocalData.gps != input_data.gps) {
+            refreshDataPoint(storedLocalData.gps, input_data.gps, 0, 40, "GPS: ");
+            storedLocalData.gps = input_data.gps;
+        }
+    }
+    display.display();
 }

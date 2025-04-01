@@ -65,6 +65,7 @@ class AuxillaryScreen {
     void enableShowingData();
     void disableShowingData();
     void requestScreen(Screen targetScreen);
+    void refreshDataPoint(int old_data, int new_data, uint8_t index_x, uint8_t index_y, const char* message);
     void updateLocalData(LocalData data);
     void updateRocketData(RocketData data);
 };

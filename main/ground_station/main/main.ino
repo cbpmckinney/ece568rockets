@@ -34,7 +34,7 @@ enum STATE
   PRIME,
   FIRE,
   COLLECT,
-  RECOERY,
+  RECOVERY,
   ERR
 };
 
@@ -143,6 +143,18 @@ void loop() {
 
       processUserInput();
 
+    case FIRE:
+
+      // processUserInput();?
+
+    case COLLECT:
+      // processUserInput();?
+      // Force data screen?
+
+    case RECOVERY:
+
+      // processUserInput();?
+      // Update AUX screen with coordinates and arrow?
 
   }
 
@@ -183,8 +195,8 @@ void updateDataDisplay() {
   }
 
   if (auxScreen.data_screen_enabled) {
-    auxScreen.storedLocalData = groundStationData;
-    auxScreen.storedRocketData = receivedRocketData;
+    auxScreen.updateLocalData(groundStationData);
+    auxScreen.updateRocketData(receivedRocketData);
     if (auxScreen.currentScreen != mainScreen.data_screen_requested) {
       Serial.print("Aux: ");Serial.println(auxScreen.currentScreen);
       Serial.print("Main: ");Serial.println(mainScreen.data_screen_requested);
