@@ -1,29 +1,33 @@
 #include <SPI.h>
 #include <RH_RF95.h>
+#include <RHReliableDatagram.h>
 
-#if defined(ARDUINO_ADAFRUIT_FEATHER_RP2040_RFM) // Feather RP2040 w/Radio
-  #define RFM95_CS   16
-  #define RFM95_INT  21
-  #define RFM95_RST  17
+#define CLIENT_ADDRESS 1
+#define SERVER_ADDRESS 2
 
-#endif
+#define RFM95_CS   16
+#define RFM95_INT  21
+#define RFM95_RST  17
 
-// Chance to 915.0 MHz (matched to Tx frequency)
-#define RF95_FREQ 915.0
+#define RF95_FREQ 915.0 // Chance to 915.0 MHz (matched to Tx frequency)
 
 // Singleton instance of the radio driver
 RH_RF95 rf95(RFM95_CS, RFM95_INT);
 
+// Class to manage message delivery and receipt, using the driver declared above
+RHReliableDatagram manager(rf95, SERVER_ADDRESS); 
+
 void setup() {
+  
   pinMode(LED_BUILTIN, OUTPUT);
   pinMode(RFM95_RST, OUTPUT);
   digitalWrite(RFM95_RST, HIGH);
 
   Serial.begin(115200);
-  while (!Serial) delay(1);
+  while (!Serial) delay(1); // Wait for serial port to be available
+  if (!manager.init())
+    Serial.println("Init failed");
   delay(100);
-
-  Serial.println("Feather LoRa RX Test!");
 
   // manual reset
   digitalWrite(RFM95_RST, LOW);
@@ -32,11 +36,11 @@ void setup() {
   delay(10);
   
   while (!rf95.init()) {
-    Serial.println("LoRa radio init failed");
+    Serial.println("Init failed");
     Serial.println("Uncomment '#define SERIAL_DEBUG' in RH_RF95.cpp for detailed debug info");
     while (1);
    }
-   Serial.println("LoRa radio init OK!");
+   Serial.println("Init OK");
    
   // Defaults after init are 434.0MHz, modulation GFSK_Rb250Fd250, +13dbM
   if (!rf95.setFrequency(RF95_FREQ)) {
@@ -52,28 +56,26 @@ void setup() {
   rf95.setTxPower(23, false);
 }
 
-void loop() {
-  if (rf95.available()) {
-    // Should be a message for us now
-    uint8_t buf[RH_RF95_MAX_MESSAGE_LEN];
-    uint8_t len = sizeof(buf);
+uint8_t data[] = "And hello back to you";
+uint8_t buf[RH_RF95_MAX_MESSAGE_LEN]; // Dont put this on the stack
 
-    if (rf95.recv(buf, &len)) {
-      digitalWrite(LED_BUILTIN, HIGH);
-      RH_RF95::printBuffer("Received: ", buf, len);
-      Serial.print("Got: ");
+void loop()
+{
+  if (manager.available())
+  {
+    // Wait for a message addressed to us from the client
+    uint8_t len = sizeof(buf);
+    uint8_t from;
+    if (manager.recvfromAck(buf, &len, &from))
+    {
+      Serial.print("got request from : 0x");
+      Serial.print(from, HEX);
+      Serial.print(": ");
       Serial.println((char*)buf);
-        Serial.print("RSSI: ");
-      Serial.println(rf95.lastRssi(), DEC);
-  
-      // Send a reply
-      uint8_t data[] = "And hello back to you";
-      rf95.send(data, sizeof(data));
-      rf95.waitPacketSent();
-      Serial.println("Sent a reply");
-      digitalWrite(LED_BUILTIN, LOW);
-    } else {
-      Serial.println("Receive failed");
+
+      // Send a reply back to the originator client
+      if (!manager.sendtoWait(data, sizeof(data), from))
+        Serial.println("sendtoWait failed");
     }
   }
 }
