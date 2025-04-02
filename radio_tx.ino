@@ -1,18 +1,21 @@
 #include <SPI.h>
 #include <RH_RF95.h>
+#include <RHReliableDatagram.h>
 
-#if defined(ARDUINO_ADAFRUIT_FEATHER_RP2040_RFM) // Feather RP2040 w/Radio
-  #define RFM95_CS   16
-  #define RFM95_INT  21
-  #define RFM95_RST  17
+#define CLIENT_ADDRESS 1
+#define SERVER_ADDRESS 2
 
-#endif
+#define RFM95_CS   16 // Chip select pin
+#define RFM95_INT  21 // Interrupt pin
+#define RFM95_RST  17 // Reset pin
 
-// Chance to 915.0 MHz (matched to Rx frequency)
-#define RF95_FREQ 915.0
+#define RF95_FREQ 915.0 // Change to 915.0 MHz (matched to Rx frequency)
 
 // Singleton instance of the radio driver
 RH_RF95 rf95(RFM95_CS, RFM95_INT);
+
+// Class to manage message delivery and receipt, using the driver declared above
+RHReliableDatagram manager(rf95, CLIENT_ADDRESS);
 
 void setup() {
   // put your setup code here, to run once:
@@ -21,10 +24,10 @@ void setup() {
   digitalWrite(RFM95_RST, HIGH);
 
   Serial.begin(115200);
-  while (!Serial) delay(1);
+  while (!Serial) delay(1); // Wait for serial port to be available
+  if (!manager.init())
+    Serial.println("init failed");
   delay(100);
-
-  Serial.println("Feather LoRa TX Test!");
 
   // manual reset
   digitalWrite(RFM95_RST, LOW);
@@ -33,15 +36,15 @@ void setup() {
   delay(10);
 
   while (!rf95.init()) {
-    Serial.println("LoRa radio init failed");
+    Serial.println("Init failed");
     Serial.println("Uncomment '#define SERIAL_DEBUG' in RH_RF95.cpp for detailed debug info");
     while (1);
   }
-  Serial.println("LoRa radio init OK!");
+  Serial.println("Init OK");
 
   // Defaults after init are 434.0MHz, modulation GFSK_Rb250Fd250, +13dbM
   if (!rf95.setFrequency(RF95_FREQ)) {
-    Serial.println("setFrequency failed");
+    Serial.println("Set freq failed");
     while (1);
   }
   Serial.print("Set Freq to: "); Serial.println(RF95_FREQ);
@@ -53,41 +56,33 @@ void setup() {
   // you can set transmitter powers from 5 to 23 dBm:
   rf95.setTxPower(23, false);
 }
-int16_t packetnum = 0; // packet counter, we increment per xmission
 
-void loop() {
-  // put your main code here, to run repeatedly:
+uint8_t data[] = "Hello World!";
+uint8_t buf[RH_RF95_MAX_MESSAGE_LEN]; // Dont put this on the stack:
 
-  delay(1000); // Wait 1 second between transmits, could also 'sleep' here!
-  Serial.println("Transmitting..."); // Send a message to rf95_server
-  char radiopacket[20] = "Hello World # ";
-  itoa(packetnum++, radiopacket+13, 10);
-  Serial.print("Sending "); Serial.println(radiopacket);
-  radiopacket[19] = 0;
-  
-  Serial.println("Sending...");
-  delay(10);
-  rf95.send((uint8_t *)radiopacket, 20);
-  
-  Serial.println("Waiting for packet to complete...");
-  delay(10);
-  rf95.waitPacketSent(); // Now wait for a reply
-  uint8_t buf[RH_RF95_MAX_MESSAGE_LEN];
-  uint8_t len = sizeof(buf);
-
-  Serial.println("Waiting for reply...");
-  if (rf95.waitAvailableTimeout(1000)) {
-    // Should be a reply message for us now
-    if (rf95.recv(buf, &len)) {
-    Serial.print("Got reply: ");
-    Serial.println((char*)buf);
-    Serial.print("RSSI: ");
-    Serial.println(rf95.lastRssi(), DEC);
-    } else {
-      Serial.println("Receive failed");
+void loop()
+{
+  Serial.println("Sending to rf95_reliable_datagram_server");
+    
+  // Send a message to manager_server
+  if (manager.sendtoWait(data, sizeof(data), SERVER_ADDRESS))
+  {
+    // Now wait for a reply from the server
+    uint8_t len = sizeof(buf);
+    uint8_t from;   
+    if (manager.recvfromAckTimeout(buf, &len, 2000, &from))
+    {
+      Serial.print("got reply from : 0x");
+      Serial.print(from, HEX);
+      Serial.print(": ");
+      Serial.println((char*)buf);
     }
-  } else {
-    Serial.println("No reply, is there a listener around?");
+    else
+    {
+      Serial.println("No reply, is rf95_reliable_datagram_server running?");
+    }
   }
-  
+  else
+    Serial.println("sendtoWait failed");
+  delay(500);
 }
