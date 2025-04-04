@@ -10,7 +10,7 @@ William Li
 #include <Adafruit_SH110X.h>
 #include <RotaryEncoder.h>
 #include "MainScreen.h"
-#include "AuxillaryScreen.h"
+#include "AuxiliaryScreen.h"
 #include "OLEDScreenTests.h"
 
 // Launch Code
@@ -43,7 +43,7 @@ STATE state = ERR;
 
 // Screens
 MainScreen mainScreen = MainScreen();
-AuxillaryScreen auxScreen = AuxillaryScreen();
+AuxiliaryScreen auxScreen = AuxiliaryScreen();
 LocalData groundStationData;
 RocketData receivedRocketData;
 uint8_t* pin = NULL;
