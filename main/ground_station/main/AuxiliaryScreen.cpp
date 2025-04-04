@@ -1,5 +1,5 @@
 /*********************************************************************
-Auxillary Screen Implementation File
+Auxiliary Screen Implementation File
     Here is where you define all the methods that were declared in the
     header file.
 
@@ -9,24 +9,24 @@ Written by:
 Chris Silman
 *********************************************************************/
 
-#include "AuxillaryScreen.h"
+#include "AuxiliaryScreen.h"
 #include "Arduino.h"
 
 /************************************
-* Auxillary Screen
+* Auxiliary Screen
 *************************************/
 
-void AuxillaryScreen::initialize(uint8_t i2caddr) {
+void AuxiliaryScreen::initialize(uint8_t i2caddr) {
     display.begin(i2caddr, true);
     clearDisplay();
 }
 
-void AuxillaryScreen::clearDisplay() {
+void AuxiliaryScreen::clearDisplay() {
     display.clearDisplay();
     display.display();
 }
 
-void AuxillaryScreen::showLocalData() {
+void AuxiliaryScreen::showLocalData() {
     currentScreen = LOCAL;
 
     clearDisplay();
@@ -47,7 +47,7 @@ void AuxillaryScreen::showLocalData() {
     display.display();
 }
 
-void AuxillaryScreen::showRocketData() {
+void AuxiliaryScreen::showRocketData() {
     currentScreen = ROCKET;
 
     clearDisplay();
@@ -68,7 +68,7 @@ void AuxillaryScreen::showRocketData() {
     display.display();
 }
 
-void AuxillaryScreen::jumpToScreen(Screen screen) {
+void AuxiliaryScreen::jumpToScreen(Screen screen) {
     Serial.print("In jump to screen, going to: "); Serial.println(screen);
     switch (screen) {
         case LOCAL:
@@ -87,22 +87,22 @@ void AuxillaryScreen::jumpToScreen(Screen screen) {
     }
 }
 
-void AuxillaryScreen::enableShowingData() {
+void AuxiliaryScreen::enableShowingData() {
     data_screen_enabled = true;
 }
 
-void AuxillaryScreen::disableShowingData() {
+void AuxiliaryScreen::disableShowingData() {
     data_screen_enabled = false;
     jumpToScreen(NONE);
 }
 
-void AuxillaryScreen::requestScreen(Screen targetScreen) {
+void AuxiliaryScreen::requestScreen(Screen targetScreen) {
     if (targetScreen == LOCAL or targetScreen == ROCKET) {
         jumpToScreen(targetScreen);
     }
 }
 
-void AuxillaryScreen::refreshDataPoint(int old_data, int new_data, uint8_t index_x, uint8_t index_y, const char* message) {
+void AuxiliaryScreen::refreshDataPoint(int old_data, int new_data, uint8_t index_x, uint8_t index_y, const char* message) {
     display.setTextColor(SH110X_BLACK);
     display.setCursor(index_x,index_y);
     display.print(F(message)); display.println(old_data);
@@ -111,7 +111,7 @@ void AuxillaryScreen::refreshDataPoint(int old_data, int new_data, uint8_t index
     display.print(F(message)); display.println(new_data);
 }
 
-void AuxillaryScreen::updateLocalData(LocalData input_data) {
+void AuxiliaryScreen::updateLocalData(LocalData input_data) {
     if (data_screen_enabled) {
         Serial.println("Showing local data");
         // Find what data has actually updated since last update
@@ -143,7 +143,7 @@ void AuxillaryScreen::updateLocalData(LocalData input_data) {
     display.display();
 }
 
-void AuxillaryScreen::updateRocketData(RocketData input_data) {
+void AuxiliaryScreen::updateRocketData(RocketData input_data) {
     if (data_screen_enabled) {
         Serial.println("Showing local data");
         // Find what data has actually updated since last update

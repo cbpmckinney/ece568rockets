@@ -1,13 +1,13 @@
 /*********************************************************************
-Auxillary Screen Header File
-    Declares the Auxillary Screen class, its members, and methods.
+Auxiliary Screen Header File
+    Declares the Auxiliary Screen class, its members, and methods.
 
 Written by:
 Chris Silman
 *********************************************************************/
 
-#ifndef _AuxillaryScreen_
-#define _AuxillaryScreen_ 
+#ifndef _AuxiliaryScreen_
+#define _AuxiliaryScreen_ 
 
 #define SCREEN_WIDTH 128  // OLED display width, in pixels
 #define SCREEN_HEIGHT 128 // OLED display height, in pixels
@@ -46,7 +46,7 @@ struct RocketData {
 #include <Arduino.h>
 #include <memory>
 
-class AuxillaryScreen {
+class AuxiliaryScreen {
   public:
     
     // Members
@@ -71,4 +71,4 @@ class AuxillaryScreen {
 };
 
 
-#endif // _AuxillaryScreen_
+#endif // _AuxiliaryScreen_

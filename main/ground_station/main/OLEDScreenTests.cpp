@@ -9,7 +9,7 @@ bool pinCorrect(uint8_t* pin) {
     }
 }
 
-void testDataScreen(MainScreen main_screen, AuxillaryScreen aux_screen) {
+void testDataScreen(MainScreen main_screen, AuxiliaryScreen aux_screen) {
     main_screen.resetIndices();
     main_screen.showMenu();
     delay(2*DEBUG_TIME_SCALE);

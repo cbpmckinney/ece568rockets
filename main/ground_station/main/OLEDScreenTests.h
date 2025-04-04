@@ -4,9 +4,9 @@
 #define DEBUG_TIME_SCALE 500
 
 #include "MainScreen.h"
-#include "AuxillaryScreen.h"
+#include "AuxiliaryScreen.h"
 
-void testDataScreen(MainScreen m_screen, AuxillaryScreen a_screen);
+void testDataScreen(MainScreen m_screen, AuxiliaryScreen a_screen);
 void testFullLaunch(MainScreen screen);
 
 #endif //_OLEDScreenTests_
