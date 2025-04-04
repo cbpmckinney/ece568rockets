@@ -1,5 +1,6 @@
 #include "main.h"
 #include "Sensor.h"
+#include "DOFSensor.h"
 
 #define DEBUG 1
 
@@ -16,7 +17,7 @@ void setup() {
 void loop() {
   static rocket_states_t currRocketState = BOOTUP;
   static sensorStatus statusByte;
-  static Sensor dofSensor;
+  static DOFSensor dofSensor;
   static Sensor altitude_sensor;
   static Sensor temperature_sensor;
   static Sensor gps;
@@ -136,16 +137,18 @@ void loop() {
         }
       #endif
         static uint8_t debounceVelocityCount = 0;
-        statusByte.bits.dof_sensor         = dofSensor.collectData();
+        static uint8_t simAlt = 0; // REPLACE WITH ACTUAL CURRENT ALTITUDE
+        statusByte.bits.dof_sensor         = dofSensor.collectData( simAlt++ );
         statusByte.bits.altitude_sensor    = altitude_sensor.collectData();
         statusByte.bits.temperature_sensor = temperature_sensor.collectData();
         statusByte.bits.gps                = gps.collectData(); // probably just velocity
-        //if( dofSensor.velocity < 2 )
-        //   debounceVeloctyCount++;
-        //else
-        //   debounceVeloctyCount = 0;
-        //if( debounceVeloctyCount >= 10 )
-        //   currRocketState = RECOVERY;
+        if( dofSensor.doneFlying )
+        {
+        #ifdef DEBUG
+           firstEntry = true;
+        #endif
+           currRocketState = RECOVERY;
+        }
         break;
         
       case RECOVERY:
