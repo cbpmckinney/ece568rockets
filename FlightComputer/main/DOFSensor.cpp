@@ -4,13 +4,14 @@
 #include <Adafruit_BNO055.h>
 #include <EEPROM.h>
 
+#define AVERAGE_DATA_BUFFER_SIZE 1000
 //#define DEBUGDOF 1
 
 // LIBRARY CODE:
 double xPos = 0, yPos = 0, headingVel = 0;
 uint16_t BNO055_SAMPLERATE_DELAY_MS = 10; //how often to read data from the board
-uint16_t PRINT_DELAY_MS = 1000; // how often to print the data
-uint16_t printCount = 0; //counter to avoid printing every 10MS sample
+static uint16_t PRINT_DELAY_MS = 1000; // how often to print the data
+static uint16_t printCount = 0; //counter to avoid printing every 10MS sample
 //velocity = accel*dt (dt in seconds)
 //position = 0.5*accel*dt^2
 double ACCEL_VEL_TRANSITION =  (double)(BNO055_SAMPLERATE_DELAY_MS) / 1000.0;
@@ -21,9 +22,9 @@ double DEG_2_RAD = 0.01745329251; //trig functions require radians, BNO055 outpu
 //                                   id, address
 Adafruit_BNO055 bno = Adafruit_BNO055(55, 0x28);
 
-unsigned long timeOfLastPoll;
-bool isInitialized = false;
-bool firstPoll = false;
+static unsigned long timeOfLastPoll;
+static bool isInitialized = false;
+static bool firstPoll = false;
 
 static float sum = 0;
 static unsigned int count = 0;
@@ -177,7 +178,7 @@ sensor_status_t DOFSensor::initialize()
 
     if (!bno.begin())
     {
-        Serial.print("No BNO055 detected");
+        Serial.println("No BNO055 detected");
         return SENSOR_NOT_WORKING;
     }
     delay(1000);
@@ -304,6 +305,17 @@ sensor_status_t DOFSensor::initialize()
 
 sensor_status_t DOFSensor::setInitialDataValues()
 {
+    this->average = 0;
+    this->peak = 0;
+    for (int i = 0; i < 1000; i++) {
+        this->averageDataArray[i] = 0;
+    }
+    this->doneFlying = false;
+    per10mData_t zero = { 0 };
+    for (int i = 0; i < 100; i++) {
+        this->per10mDataArray[i] = zero;
+        this->isCollectedArray[i] = false;
+    }
     return SENSOR_WORKING;
 }
 

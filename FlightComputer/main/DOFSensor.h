@@ -3,8 +3,6 @@
 #include "main.h"
 #include "Sensor.h"
 
-#define AVERAGE_DATA_BUFFER_SIZE 1000
-
 class DOFSensor 
 {
     public:
