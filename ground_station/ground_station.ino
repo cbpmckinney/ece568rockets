@@ -18,9 +18,16 @@ William Li
 #define PIN_VALUE_2 1
 #define PIN_VALUE_3 3
 
+// Peripheral Pins
 #define ROTARY_PIN_B 27
 #define ROTARY_PIN_A 28
-#define ROTARY_BTN 11
+#define ROTARY_BTN 24
+#define RED_BTN_LED_PIN 11
+#define RED_BTN_PRESS_PIN 10
+#define KEY_SW_PIN 12 // SW GREEN = CLOSED, SW RED = OPEN
+#define LED_RED 5
+#define LED_GREEN 6
+#define LED_BLUE 9
 
 // How much time needs to pass before registering another button press, in ms
 #define BUTTON_PRESS_LIMIT 500
@@ -56,6 +63,12 @@ int pos = 0;
 int newPos = 0;
 int previousButtonState = 0;
 
+// Button debouncing
+int read_button_value = 0;
+int last_debounce_time = 0;
+int last_button_state = 0;
+int debounce_delay = 50; //ms
+
 void setup() {
   state = INITIALIZE;
   Serial.begin(9600);
@@ -63,6 +76,9 @@ void setup() {
 
   Serial.println("Serial started!");
 
+
+  initializeLED();
+  initializePeripherals();
   initializeScreens();
 
   encoder = new RotaryEncoder(ROTARY_PIN_B, ROTARY_PIN_A, RotaryEncoder::LatchMode::TWO03);
@@ -81,7 +97,11 @@ void loop() {
 
     case CONN_WAIT:
       // Verify connection to rocket
-      state = SAFE;
+      //if (connection_verifed)
+      //{
+        updateLEDColor(0, 255, 0);
+        state = SAFE;
+      //}
       break;
 
     // SAFE---------------------------------------
@@ -91,11 +111,17 @@ void loop() {
       if (ARMMessageReceived)
       {
         1. Respond with ARM Message CONFIRMED.
-        2. Update main screen to have state rocket_armed = true
-        3. Update LED on ground station to signify rocket is armed
-        4. Update state to ARM
+        2. Update main screen to have state rocket_armed = true (mainScreen.rocket_armed = true;)
+        3. Update LED on ground station to signify rocket is armed (updateLEDColor(255,95,31);)
+        4. Update state to ARM (state = ARM;)
       }
       */
+
+      //TEST - REMOVE LATER START
+      //mainScreen.rocket_armed = true;
+      //updateLEDColor(255,125,0);
+      //state = ARM;
+      //TEST - REMOVE LATER END
 
       // If data screen enabled
       updateDataDisplay();
@@ -108,6 +134,7 @@ void loop() {
     // ARM---------------------------------------
     case ARM:
       if (keyInserted()) {
+        Serial.println("Key inserted");
         mainScreen.key_inserted = true;
       } 
       else
@@ -129,23 +156,59 @@ void loop() {
         // User (screen) gave go-ahead on priming rocket.
         // Send message to rocket signifying ground station ready to PRIME
         //  *requires a response back
-        //  Update LED on ground station to signify rocket is primed
         // Make big red button glow
         state = PRIME;
+        updateLEDColor(255, 0, 0);
       }
+
+      // If data screen enabled
+      updateDataDisplay();
 
       // Process user input
       processUserInput();
+
+      break;
       
     // PRIME---------------------------------------
     case PRIME:
       Serial.println("PRIME");
 
+      read_button_value = digitalRead(RED_BTN_PRESS_PIN);
+      
+      // Debounce button input
+      if (read_button_value != last_button_state) {
+        last_debounce_time = millis();
+      }
+
+      if ((millis() - last_debounce_time) > debounce_delay) {
+        if (read_button_value == 1) {
+          // BUTTON PRESSED
+          updateLEDColor(255, 0, 0);
+          delay(100);
+          updateLEDColor(0, 0, 0);
+          delay(100);
+          updateLEDColor(255, 0, 0);
+          delay(100);
+          updateLEDColor(0, 0, 0);
+          delay(100);
+          updateLEDColor(255, 0, 0);
+          delay(100);
+          updateLEDColor(0, 0, 0);
+          delay(100);
+          state = FIRE;
+        }
+      }
+
+      last_button_state = read_button_value;
+
       processUserInput();
+
+      break;
 
     case FIRE:
       Serial.println("FIRE");
       // processUserInput();?
+      break;
 
     case COLLECT:
       Serial.println("COLLECT");
@@ -153,12 +216,14 @@ void loop() {
       // Force data screen?
       // Receive radio information, make that top priority
       // Should Rocket send RECOVERY message to exit this state?
+      break;
 
     case RECOVERY:
       Serial.println("RECOVERY");
 
       // processUserInput();?
       // Update AUX screen with coordinates and arrow?
+      break;
       
 
   }
@@ -168,6 +233,23 @@ void loop() {
 void checkEncoderPosition()
 {
   encoder->tick(); // just call tick() to check the state.
+}
+
+void updateLEDColor(int red, int green, int blue) {
+  analogWrite(LED_RED, red);
+  analogWrite(LED_GREEN, green);
+  analogWrite(LED_BLUE, blue);
+}
+
+void initializeLED() {
+  pinMode(LED_RED, OUTPUT);
+  pinMode(LED_GREEN, OUTPUT);
+  pinMode(LED_BLUE, OUTPUT);
+  updateLEDColor(255, 255, 0);
+}
+
+void initializePeripherals() {
+  pinMode(KEY_SW_PIN, INPUT);
 }
 
 void initializeScreens() {
@@ -271,6 +353,11 @@ bool validatePin(uint8_t* pin) {
 }
 
 bool keyInserted() {
-  // TODO
-  return false;
+  // CURRENTLY NOT DEBOUNCED, SHOULD BE?
+  if (digitalRead(KEY_SW_PIN)) {
+    return true;
+  } else {
+    return false;
+  }
+  
 }
