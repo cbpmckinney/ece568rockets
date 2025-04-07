@@ -8,14 +8,14 @@ Adafruit_GPS GPS(&Wire);
 #define DEBUG false // to view raw GPS data
 
 uint32_t timer = millis();
-int timer_time = 3000; // ms
+int timer_time = 1000; // 1 Hz
 uint32_t gpsAddr = 0x10;
 
 // coordinate conversion vars:
 int converted_lat_deg;
 int converted_lon_deg;
-double converted_lat; // holds data for RF
-double converted_lon; // holds data for RF
+float converted_lat; // holds data for RF
+float converted_lon; // holds data for RF
 
 void setup()
 {
@@ -68,7 +68,7 @@ void loop()
     timer = millis(); // reset the timer
     if (GPS.fix) {
       Serial.println("==============");
-      Serial.println("[FIX]: TRUE"); 
+      // Serial.println("[FIX]: TRUE"); 
       Serial.print("[LATITUDE]: ");
       converted_lat_deg = (int)(GPS.latitude/100); // extract degrees
       converted_lat = GPS.latitude - (converted_lat_deg * 100); // extract mins
@@ -90,7 +90,7 @@ void loop()
       Serial.print("[SPEED]: "); Serial.print(GPS.speed); Serial.println(" Knots");
       Serial.print("[ANGLE]: "); Serial.print(GPS.angle); Serial.println(" Degrees");
       Serial.print("[ALTITUDE]: "); Serial.print(GPS.altitude); Serial.println(" Meters");
-      Serial.print("[CONNECTED SATELLITES]: "); Serial.print((int)GPS.satellites); Serial.println(" Satellites");
+      // Serial.print("[CONNECTED SATELLITES]: "); Serial.print((int)GPS.satellites); Serial.println(" Satellites");
     }
     else {
       Serial.println("No fix...");
