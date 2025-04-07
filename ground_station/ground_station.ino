@@ -149,14 +149,17 @@ void loop() {
 
     case COLLECT:
       Serial.println("COLLECT");
-      // processUserInput();?
+      // processUserInput( to show);?
       // Force data screen?
+      // Receive radio information, make that top priority
+      // Should Rocket send RECOVERY message to exit this state?
 
     case RECOVERY:
       Serial.println("RECOVERY");
 
       // processUserInput();?
       // Update AUX screen with coordinates and arrow?
+      
 
   }
 
@@ -255,7 +258,7 @@ bool validatePin(uint8_t* pin) {
     // Pin cannot be zeros, this is default
     if (pin[0] == 0 && pin[1] == 0 && pin[2] == 0) 
     {
-      // INVALID PIN VALUE
+      // 0 0 0 IS INVALID PIN VALUE
       return false;
     }
 
@@ -268,5 +271,6 @@ bool validatePin(uint8_t* pin) {
 }
 
 bool keyInserted() {
+  // TODO
   return false;
 }
