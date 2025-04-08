@@ -3,8 +3,24 @@
 #include "DOFSensor.h"
 #include "altitudeSensor.h"
 #include "temperatureSensor.h"
+#include <SPI.h>
+#include <RH_RF95.h> // Driver to send and receive datagrams via LoRa capable radio transceiver
+#include <RHReliableDatagram.h> // Manager to send addressed, acknowledged, retransmitted datagrams
+
 #define DEBUG 1
 #define RelayPin 25
+
+#define CLIENT_ADDRESS 1
+#define SERVER_ADDRESS 2
+
+#define RFM95_CS   16 // Chip select pin
+#define RFM95_INT  21 // Interrupt pin
+#define RFM95_RST  17 // Reset pin
+
+#define RF95_FREQ 915.0 // Change to 915.0 MHz
+
+RH_RF95 rf95(RFM95_CS, RFM95_INT); // radio driver instance
+RHReliableDatagram manager(rf95, CLIENT_ADDRESS); // manager instance using above driver
 
 void setup() {
 #ifdef DEBUG
@@ -15,8 +31,31 @@ void setup() {
 #endif
   pinMode(RelayPin, OUTPUT); // relay output pin
   digitalWrite(RelayPin, LOW); // set relay to off
-  // put your setup code here, to run once:
+  
+  // radio initialization
+  pinMode(RFM95_RST, OUTPUT);
+  digitalWrite(RFM95_RST, HIGH);
+  if (!manager.init())
+    Serial.println("RADIO INIT FAIL: MANAGER");
+  delay(100);
+  // radio manual reset
+  digitalWrite(RFM95_RST, LOW);
+  delay(10);
+  digitalWrite(RFM95_RST, HIGH);
+  delay(10);
+  while (!rf95.init()) {
+    Serial.println("RADIO INIT FAIL: DRIVER");
+    while (1);
+  }
+  Serial.println("RADIO INIT OK");
+  if (!rf95.setFrequency(RF95_FREQ)) {
+    Serial.println("SET FREQ FAIL");
+    while (1);
+  }
+  rf95.setTxPower(23, false); // set tx power to 23 dBm
 }
+
+uint8_t buf[RH_RF95_MAX_MESSAGE_LEN]; // don't put this on the stack
 
 void loop() {
   static rocket_states_t currRocketState = BOOTUP;
@@ -53,7 +92,9 @@ void loop() {
         #endif
           currRocketState = SAFE;
         }
-        // THE ELSE IS ASSUMING WE WILL SEND A RADIO SIGNAL THAT SOMETHING IS WRONG
+        // else send error message
+        uint8_t data[] = "ERROR: BOOTUP";
+        manager.sendtoWait(data, sizeof(data), SERVER_ADDRESS)
         break;
 
       case SAFE:
@@ -66,6 +107,18 @@ void loop() {
       #endif
         //DO NOTHING
         static bool armCommandReceived = false;
+
+        // listen to receive ARM command from ground station
+        uint8_t len = sizeof(buf);
+        uint8_t from;
+        if (manager.recvfromAck(buf, &len, &from))
+        {
+          String command = (char*)buf;
+          if (command = "ARM")
+          {
+            armCommandReceived = true;
+          }
+        }
         if( armCommandReceived )
         {
         #ifdef DEBUG
@@ -105,6 +158,16 @@ void loop() {
         }
       #endif
         static bool launchCommandReceived = false;
+        // listen to receive LAUNCH command from ground station
+        uint8_t len = sizeof(buf);
+        uint8_t from;
+        if (manager.recvfromAck(buf, &len, &from))
+        {
+          String command = (char*)buf;
+          if (command = "LAUNCH")
+          {
+            launchCommandReceived = true;
+          }
         if( launchCommandReceived )
         {
         #ifdef DEBUG
@@ -149,6 +212,7 @@ void loop() {
         statusByte.bits.temperature_sensor = temperature_sensor.collectData( altitude_sensor.currAltitude );
         statusByte.bits.dof_sensor         = dofSensor.collectData( altitude_sensor.currAltitude );
         statusByte.bits.gps                = gps.collectData(); // probably just velocity
+
         
         //COMMENT THIS NEXT SECTION OUT IF YOU ARE RUNNING ON YOUR COMPUTER ON THE GROUND OR IT WILL INSTANTLY TRANSITION
         if( dofSensor.doneFlying )
