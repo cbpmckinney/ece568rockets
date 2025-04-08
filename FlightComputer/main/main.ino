@@ -4,6 +4,7 @@
 #include "altitudeSensor.h"
 #include "temperatureSensor.h"
 #define DEBUG 1
+#define RelayPin 25
 
 void setup() {
 #ifdef DEBUG
@@ -12,6 +13,8 @@ void setup() {
   while (!Serial) delay(10);  // wait for serial port to open!
   
 #endif
+  pinMode(RelayPin, OUTPUT); // relay output pin
+  digitalWrite(RelayPin, LOW); // set relay to off
   // put your setup code here, to run once:
 }
 
@@ -119,6 +122,10 @@ void loop() {
           Serial.println("ROCKET IN LAUNCH");
         }
       #endif
+
+        // digitalWrite(RelayPin, HIGH); fires relay
+        // need to set this back to low, perhaps when flying?
+
         static bool isFlying = false;
         if( isFlying )
         {
