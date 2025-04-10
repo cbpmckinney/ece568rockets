@@ -99,11 +99,15 @@ bool rocket_process() {
       Serial.print("Received: ");
       Serial.print(received);
       Serial.println(" from the ground station");
-    }
-    if (strcmp(received, ack) == 0) { // check if we got an ACK request,
-      Serial.println("Sending ACK...");
-      tx(ready); // send ACK
-      return true;
+      if (strcmp(received, ack) == 0) { // check if we got an ACK request,
+        Serial.println("Sending ACK...");
+        tx(ready); // send ACK
+        return true;
+      }
+      else {
+        return false; // weird ACK
+      }
+
     }
     free(received);
   }
