@@ -12,6 +12,22 @@ William Li
 #include "MainScreen.h"
 #include "AuxiliaryScreen.h"
 #include "OLEDScreenTests.h"
+#include <SPI.h>
+#include <RH_RF95.h> // Driver to send and receive datagrams via LoRa capable radio transceiver
+#include <RHReliableDatagram.h> // Manager to send addressed, acknowledged, retransmitted datagrams
+
+// Radio code
+#define CLIENT_ADDRESS 1
+#define SERVER_ADDRESS 2
+
+#define RFM95_CS   16 // Chip select pin
+#define RFM95_INT  21 // Interrupt pin
+#define RFM95_RST  17 // Reset pin
+
+#define RF95_FREQ 915.0 // Change to 915.0 MHz
+
+RH_RF95 rf95(RFM95_CS, RFM95_INT); // radio driver instance
+RHReliableDatagram manager(rf95, CLIENT_ADDRESS); // manager instance using above driver
 
 // Launch Code
 #define PIN_VALUE_1 2
@@ -68,7 +84,31 @@ void setup() {
   encoder = new RotaryEncoder(ROTARY_PIN_B, ROTARY_PIN_A, RotaryEncoder::LatchMode::TWO03);
   attachInterrupt(digitalPinToInterrupt(ROTARY_PIN_A), checkEncoderPosition, CHANGE);
   attachInterrupt(digitalPinToInterrupt(ROTARY_PIN_B), checkEncoderPosition, CHANGE);
+
+// radio initialization
+  pinMode(RFM95_RST, OUTPUT);
+  digitalWrite(RFM95_RST, HIGH);
+  if (!manager.init())
+    Serial.println("RADIO INIT FAIL: MANAGER");
+  delay(100);
+  // radio manual reset
+  digitalWrite(RFM95_RST, LOW);
+  delay(10);
+  digitalWrite(RFM95_RST, HIGH);
+  delay(10);
+  while (!rf95.init()) {
+    Serial.println("RADIO INIT FAIL: DRIVER");
+    while (1);
+  }
+  Serial.println("RADIO INIT OK");
+  if (!rf95.setFrequency(RF95_FREQ)) {
+    Serial.println("SET FREQ FAIL");
+    while (1);
+  }
+  rf95.setTxPower(23, false); // set tx power to 23 dBm
 }
+
+uint8_t buf[RH_RF95_MAX_MESSAGE_LEN]; // don't put this on the stack
 
 void loop() {
   // Switch, only one state processed per main operating loop
@@ -128,10 +168,18 @@ void loop() {
       if (mainScreen.prime_permissive) {
         // User (screen) gave go-ahead on priming rocket.
         // Send message to rocket signifying ground station ready to PRIME
-        //  *requires a response back
-        //  Update LED on ground station to signify rocket is primed
-        // Make big red button glow
-        state = PRIME;
+        uint8_t data[] = "ARM";
+        manager.sendtoWait(data, sizeof(data), CLIENT_ADDRESS)
+        //  listen for arming confirmation
+        if (manager.recvfromAck(buf, &len, &from))
+        {
+          String command = (char*)buf;
+          if (command = "ARMED")
+          {
+            //  Update LED on ground station to signify rocket is primed
+            // Make big red button glow
+            state = PRIME;
+          }
       }
 
       // Process user input
@@ -152,6 +200,12 @@ void loop() {
       // processUserInput( to show);?
       // Force data screen?
       // Receive radio information, make that top priority
+      uint8_t len = sizeof(buf);
+      uint8_t from;   
+      if (manager.recvfromAckTimeout(buf, &len, 2000, &from))
+      {
+        Serial.println((char*)buf); // display received data
+      }
       // Should Rocket send RECOVERY message to exit this state?
 
     case RECOVERY:
