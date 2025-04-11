@@ -3,6 +3,8 @@
 #include "DOFSensor.h"
 #include "altitudeSensor.h"
 #include "temperatureSensor.h"
+#include "RFManager.h"
+
 #define DEBUG 1
 #define RelayPin 25
 
@@ -25,15 +27,20 @@ void loop() {
   static AltitudeSensor altitude_sensor;
   static TemperatureSensor temperature_sensor;
   static Sensor gps;
-
+  static RFManager rfManager;
+  static bool armCommandReceived = false;
+  static bool launchCommandReceived = false;
+  static bool verifyDataCommandReceived = false;
+  static bool reinitializeCommandReceived = false;
 #define DEBUG 1
 #ifdef DEBUG
   static bool firstEntry = true;
 #endif
-  /* DECLARE A STATIC OF YOUR CLASS FOR SENSOR HERE */
 
   switch( currRocketState )
   {
+      case POWERONFAILURE:
+        break;
       case BOOTUP:
       #ifdef DEBUG
         if( firstEntry )
@@ -46,12 +53,19 @@ void loop() {
         statusByte.bits.altitude_sensor    = altitude_sensor.initialize();
         statusByte.bits.temperature_sensor = temperature_sensor.initialize();
         statusByte.bits.gps                = gps.initialize(); //use to initialize altitude sensor? IDK
+        statusByte.bits.RFtransmitter      = rfManager.initialize();
         if(statusByte.byte == 0)
         {
         #ifdef DEBUG
           firstEntry = true;
         #endif
           currRocketState = SAFE;
+          rfManager.sendStatus( statusByte, currRocketState );
+        }
+        else
+        {
+          currRocketState = POWERONFAILURE;
+          rfManager.sendStatus( statusByte, currRocketState );
         }
         // THE ELSE IS ASSUMING WE WILL SEND A RADIO SIGNAL THAT SOMETHING IS WRONG
         break;
@@ -64,14 +78,17 @@ void loop() {
           Serial.println("ROCKET IN SAFE");
         }
       #endif
-        //DO NOTHING
-        static bool armCommandReceived = false;
+        if( rfManager.receivedCommand( ARM_PACKET ) )
+        {
+          armCommandReceived = true;
+        }
         if( armCommandReceived )
         {
         #ifdef DEBUG
           firstEntry = true;
         #endif
           currRocketState = ARM;
+          rfManager.sendStatus( statusByte, currRocketState );
         }
         break;
 
@@ -93,6 +110,7 @@ void loop() {
           firstEntry = true;
         #endif
           currRocketState = READY_FOR_LAUNCH;
+          rfManager.sendStatus( statusByte, currRocketState );
         }
         break;
 
@@ -103,14 +121,19 @@ void loop() {
           firstEntry = false;
           Serial.println("ROCKET IN READY_FOR_LAUNCH");
         }
+
+        if( rfManager.receivedCommand( LAUNCH_PACKET ) )
+        {
+          launchCommandReceived = true;
+        }
       #endif
-        static bool launchCommandReceived = false;
         if( launchCommandReceived )
         {
         #ifdef DEBUG
           firstEntry = true;
         #endif
           currRocketState = LAUNCH;
+          rfManager.sendStatus( statusByte, currRocketState );
         }
         break;
 
@@ -125,14 +148,13 @@ void loop() {
 
         // digitalWrite(RelayPin, HIGH); fires relay
         // need to set this back to low, perhaps when flying?
-
-        static bool isFlying = false;
-        if( isFlying )
+        if( dofSensor.isFlying() )
         {
         #ifdef DEBUG
           firstEntry = true;
         #endif
           currRocketState = FLIGHT;
+          rfManager.sendStatus( statusByte, currRocketState );
         }
         break;
 
@@ -150,6 +172,8 @@ void loop() {
         statusByte.bits.dof_sensor         = dofSensor.collectData( altitude_sensor.currAltitude );
         statusByte.bits.gps                = gps.collectData(); // probably just velocity
         
+        statusByte.bits.RFtransmitter          = rfManager.transmitData( dofSensor, altitude_sensor, temperature_sensor, gps );
+
         //COMMENT THIS NEXT SECTION OUT IF YOU ARE RUNNING ON YOUR COMPUTER ON THE GROUND OR IT WILL INSTANTLY TRANSITION
         if( dofSensor.doneFlying )
         {
@@ -157,6 +181,7 @@ void loop() {
            firstEntry = true;
         #endif
            currRocketState = RECOVERY;
+           rfManager.sendStatus( statusByte, currRocketState );
         }
         break;
         
@@ -169,13 +194,17 @@ void loop() {
         }
       #endif
         //statusByte.bits.gps = gps.getCoordinates;
-        static bool verifyDataCommandReceived = false;
+        if( rfManager.receivedCommand( VERIFY_DATA ) )
+        {
+          verifyDataCommandReceived = true;
+        }
         if( verifyDataCommandReceived )
         {
         #ifdef DEBUG
           firstEntry = true;
         #endif
           currRocketState = POST_FLIGHT;
+          rfManager.sendStatus( statusByte, currRocketState );
         }
         break;
 
@@ -187,14 +216,18 @@ void loop() {
           Serial.println("ROCKET IN POST_FLIGHT");
         }
       #endif
-        //RADIO RESEND DATA
-        static bool reinitializeCommandReceived = false;
+        rfManager.retransmitData();
+        if( rfManager.receivedCommand( REINITIALIZE ) )
+        {
+          reinitializeCommandReceived = true;
+        }
         if( reinitializeCommandReceived )
         {
         #ifdef DEBUG
           firstEntry = true;
         #endif
           currRocketState = BOOTUP;
+          rfManager.sendStatus( statusByte, currRocketState );
         }
         break;
   }

@@ -10,13 +10,15 @@ class DOFSensor
         float peak;
         float averageDataArray[1000];
         bool doneFlying;
-        per10mData_t per10mDataArray[100];
-        bool         isCollectedArray[100]; //MAYBE NOT NEEDED I WILL LEAVE TO RF
+        bool startedFlying;
+        float per1mDataArray[100];
+        dataPointStatus_t         isCollectedArray[100]; //MAYBE NOT NEEDED I WILL LEAVE TO RF
+        bool         isFlying();
         sensor_status_t initialize();
         sensor_status_t setInitialDataValues();
         sensor_status_t collectData( int altitude );
         void updateAverage(float currVal);
         void updatePeak(float currVal);
-        void updatePer10MDataArray( float currVal, int altitude );
-        void printPer10MData();
+        void updatePer1mDataArray( float currVal, int altitude );
+        void printPer1mData();
 };

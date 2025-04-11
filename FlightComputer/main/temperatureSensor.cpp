@@ -38,24 +38,24 @@ void TemperatureSensor::updatePeak(float currVal, float* toUpdate)
     (*toUpdate) = currVal;
 }
 
-void TemperatureSensor::updatePer10MDataArray( float currVal, int altitude, per10mData_t toUpdate[], int* currSavedAltitude )
+void TemperatureSensor::updatePer1mDataArray( float currVal, int altitude, float toUpdate[], int* currSavedAltitude, dataPointStatus_t isCollectedArray[] )
 {
-    if( altitude / 10 > *currSavedAltitude )
+    if( altitude > *currSavedAltitude )
     {
       if( *currSavedAltitude >= 100 )
           return;
-      toUpdate[ (*currSavedAltitude)].tenMeterFloor = (altitude / 10) * 10;
-      toUpdate[ (*currSavedAltitude)++ ].data = currVal;
+      isCollectedArray[(*currSavedAltitude) ] = SET_DATA;
+      toUpdate[ (*currSavedAltitude)++ ] = currVal;
     }
 }
-void TemperatureSensor::printPer10MData( per10mData_t toPrint[], int currSavedAltitude )
+void TemperatureSensor::printPer1mData( float toPrint[], int currSavedAltitude )
 {
   for( int i = 0; i < currSavedAltitude; i++ )
   {
       Serial.print("VAL AT: ");
       Serial.print(i);
       Serial.print(" ");
-      Serial.println( toPrint[i].data );
+      Serial.println( toPrint[i] );
   }
 }
 
@@ -82,10 +82,12 @@ sensor_status_t TemperatureSensor::setInitialDataValues()
         this->averageTemperatureDataArray[i] = 0;
         this->averageHumidityDataArray[i] = 0;
     }
-    per10mData_t zero = { 0 };
+    float zero = { 0xff };
     for (int i = 0; i < 100; i++) {
-        this->per10mTemperatureDataArray[i] = zero;
-        this->per10mHumidityDataArray[i] = zero;
+        this->per1mTemperatureDataArray[i] = zero;
+        this->per1mHumidityDataArray[i] = zero;
+        this->isTemperatureCollectedArray[i] = UNSET_DATA; //MAYBE NOT NEEDED I WILL LEAVE TO RF
+        this->isHumidityCollectedArray[i] = UNSET_DATA;
     }
     this->averageTempCount = 0;
     this->currTempIndex = 0;
@@ -120,12 +122,12 @@ sensor_status_t TemperatureSensor::collectData( int altitude )
   float currTemp = temp.temperature;
   updateAverage(currTemp, &(this->averageTemperature), averageTemperatureDataArray, &(this->averageTempCount), &(this->currTempIndex), &(this->temperatureSum));
   updatePeak( currTemp,  &(this->peakTemperature));
-  updatePer10MDataArray( currTemp, altitude, per10mTemperatureDataArray, &(this->savedTemperatureAltitude) );
+  updatePer1mDataArray( currTemp, altitude, per1mTemperatureDataArray, &(this->savedTemperatureAltitude), isTemperatureCollectedArray );
   
   float currHumidity = humidity.relative_humidity;
   updateAverage(currHumidity, &(this->averageHumidity), averageHumidityDataArray, &(this->averageHumidityCount), &(this->currHumidityIndex), &(this->humiditySum));
   updatePeak( currHumidity,  &(this->peakHumidity));
-  updatePer10MDataArray( currHumidity, altitude, per10mHumidityDataArray, &(this->savedHumidityAltitude) );
+  updatePer1mDataArray( currHumidity, altitude, per1mHumidityDataArray, &(this->savedHumidityAltitude), isHumidityCollectedArray );
 
 #ifdef DEBUG_TEMPERATURE_SENSOR
   if (printCount * 10 >= PRINT_DELAY_MS) {

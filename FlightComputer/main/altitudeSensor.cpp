@@ -42,24 +42,24 @@ void AltitudeSensor::updatePeak(float currVal, float* toUpdate)
     (*toUpdate) = currVal;
 }
 
-void AltitudeSensor::updatePer10MDataArray( float currVal, int altitude, per10mData_t toUpdate[], int* currSavedAltitude )
+void AltitudeSensor::updatePer1MDataArray( float currVal, int altitude, float toUpdate[], int* currSavedAltitude, dataPointStatus_t isCollectedArray[] )
 {
-    if( altitude / 10 > *currSavedAltitude )
+    if( altitude > *currSavedAltitude )
     {
       if( *currSavedAltitude >= 100 )
           return;
-      toUpdate[ (*currSavedAltitude)].tenMeterFloor = (altitude / 10) * 10;
-      toUpdate[ (*currSavedAltitude)++ ].data = currVal;
+      isCollectedArray[ (*currSavedAltitude) ] = SET_DATA;
+      toUpdate[ (*currSavedAltitude)++ ]= currVal;
     }
 }
-void AltitudeSensor::printPer10MData( per10mData_t toPrint[], int currSavedAltitude )
+void AltitudeSensor::printPer1MData( float toPrint[], int currSavedAltitude )
 {
   for( int i = 0; i < currSavedAltitude; i++ )
   {
       Serial.print("VAL AT: ");
       Serial.print(i);
       Serial.print(" ");
-      Serial.println( toPrint[i].data );
+      Serial.println( toPrint[i] );
   }
 }
 
@@ -104,11 +104,12 @@ sensor_status_t AltitudeSensor::setInitialDataValues()
         this->averageTemperatureDataArray[i] = 0;
         this->averagePressureDataArray[i] = 0;
     }
-    per10mData_t zero = { 0 };
+    float zero = { 0xff };
     for (int i = 0; i < 100; i++) {
-        this->per10mTemperatureDataArray[i] = zero;
-        this->per10mPressureDataArray[i] = zero;
-        this->isCollectedArray[i] = false;
+        this->per1mTemperatureDataArray[i] = zero;
+        this->per1mPressureDataArray[i] = zero;
+        this->isTemperatureCollectedArray[i] = UNSET_DATA; //MAYBE NOT NEEDED I WILL LEAVE TO RF
+        this->isPressureCollectedArray[i] = UNSET_DATA;
     }
     this->averageTempCount = 0;
     this->currTempIndex = 0;
@@ -148,12 +149,12 @@ sensor_status_t AltitudeSensor::collectData( )
   float currTemp = bmp.temperature;
   updateAverage(currTemp, &(this->averageTemperature), averageTemperatureDataArray, &(this->averageTempCount), &(this->currTempIndex), &(this->temperatureSum));
   updatePeak( currTemp,  &(this->peakTemperature));
-  updatePer10MDataArray( currTemp, this->currAltitude, per10mTemperatureDataArray, &(this->savedTemperatureAltitude) );
+  updatePer1MDataArray( currTemp, this->currAltitude, per1mTemperatureDataArray, &(this->savedTemperatureAltitude), isTemperatureCollectedArray );
   
   float currPressure = (bmp.pressure / 100.0);
   updateAverage(currPressure, &(this->averagePressure), averagePressureDataArray, &(this->averagePressureCount), &(this->currPressureIndex), &(this->pressureSum));
   updatePeak( currPressure,  &(this->peakPressure));
-  updatePer10MDataArray( currPressure, this->currAltitude, per10mPressureDataArray, &(this->savedPressureAltitude) );
+  updatePer1MDataArray( currPressure, this->currAltitude, per1mPressureDataArray, &(this->savedPressureAltitude), isPressureCollectedArray );
 
 #ifdef DEBUG_ALTITUDE
 if (printCount * 10 >= PRINT_DELAY_MS) {
