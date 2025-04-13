@@ -9,7 +9,8 @@ typedef enum
     LAUNCH,
     FLIGHT,
     RECOVERY,
-    POST_FLIGHT
+    POST_FLIGHT,
+    POWERONFAILURE
 } rocket_states_t;
 
 typedef enum
@@ -18,6 +19,12 @@ typedef enum
     SENSOR_NOT_WORKING = 1
 } sensor_status_t;
 
+typedef enum
+{
+   UNSET_DATA       = 0,
+   SET_DATA         = 1,
+   TRANSMITTED_DATA = 2
+} dataPointStatus_t;
 
 union sensorStatus {
     uint8_t byte;
@@ -26,7 +33,7 @@ union sensorStatus {
         sensor_status_t altitude_sensor    : 1;
         sensor_status_t temperature_sensor : 1;
         sensor_status_t gps                : 1;
-        sensor_status_t unused1            : 1;
+        sensor_status_t RFtransmitter      : 1;
         sensor_status_t unused2            : 1;
         sensor_status_t unused3            : 1;
         sensor_status_t unused4            : 1;

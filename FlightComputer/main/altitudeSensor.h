@@ -19,17 +19,18 @@ class AltitudeSensor
         unsigned int averagePressureCount;
         unsigned int currPressureIndex;
         float pressureSum;
-        per10mData_t per10mTemperatureDataArray[100];
+        float per1mTemperatureDataArray[100];
         int savedTemperatureAltitude;
-        per10mData_t per10mPressureDataArray[100];
+        float per1mPressureDataArray[100];
         int savedPressureAltitude;
-        bool         isCollectedArray[100]; //MAYBE NOT NEEDED I WILL LEAVE TO RF
+        dataPointStatus_t isTemperatureCollectedArray[100]; //MAYBE NOT NEEDED I WILL LEAVE TO RF
+        dataPointStatus_t isPressureCollectedArray[100];
         sensor_status_t initialize();
         sensor_status_t setInitialDataValues();
         sensor_status_t collectData( );
         void updateAverage(float currVal, float* toUpdate, float averageArray[], unsigned int* countToUse, unsigned int* currIndex, float* sum);
         void updatePeak(float currVal, float* toUpdate);
-        void updatePer10MDataArray( float currVal, int altitude, per10mData_t toUpdate[], int* currSavedAltitude );
-        void printPer10MData( per10mData_t toPrint[], int currSavedAltitude );
+        void updatePer1MDataArray( float currVal, int altitude, float toUpdate[], int* currSavedAltitude, dataPointStatus_t isCollectedArray[] );
+        void printPer1MData( float toPrint[], int currSavedAltitude );
         void printArray( float toPrint[], int size );
 };

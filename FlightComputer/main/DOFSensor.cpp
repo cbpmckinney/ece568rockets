@@ -53,24 +53,24 @@ void DOFSensor::updatePeak(float currVal)
 
 static int currSaved10Altitude = 0;
 
-void DOFSensor::updatePer10MDataArray( float currVal, int altitude)
+void DOFSensor::updatePer1mDataArray( float currVal, int altitude)
 {
-    if( altitude / 10 > currSaved10Altitude )
+    if( altitude > currSaved10Altitude )
     {
       if( currSaved10Altitude >= 100 )
           return;
-      per10mDataArray[ currSaved10Altitude].tenMeterFloor = (altitude / 10) * 10;
-      per10mDataArray[ currSaved10Altitude++ ].data = currVal;
+      isCollectedArray[ currSaved10Altitude ] = SET_DATA;
+      per1mDataArray[ currSaved10Altitude++ ] = currVal;
     }
 }
-void DOFSensor::printPer10MData()
+void DOFSensor::printPer1mData()
 {
   for( int i = 0; i < currSaved10Altitude; i++ )
   {
       Serial.print("VAL AT: ");
       Serial.print(i);
       Serial.print(" ");
-      Serial.println( per10mDataArray[i].data );
+      Serial.println( per1mDataArray[i] );
   }
 }
 
@@ -311,10 +311,11 @@ sensor_status_t DOFSensor::setInitialDataValues()
         this->averageDataArray[i] = 0;
     }
     this->doneFlying = false;
-    per10mData_t zero = { 0 };
+    this->startedFlying = false;
+    float zero = { 0xff };
     for (int i = 0; i < 100; i++) {
-        this->per10mDataArray[i] = zero;
-        this->isCollectedArray[i] = false;
+        this->per1mDataArray[i] = zero;
+        this->isCollectedArray[i] = UNSET_DATA;
     }
     return SENSOR_WORKING;
 }
@@ -353,7 +354,7 @@ sensor_status_t DOFSensor::collectData( int altitude )
   }
   updateAverage(headingVel);
   updatePeak(headingVel);
-  updatePer10MDataArray( headingVel, altitude );
+  updatePer1mDataArray( headingVel, altitude );
   #ifdef DEBUGDOF
   if (printCount * BNO055_SAMPLERATE_DELAY_MS >= PRINT_DELAY_MS) {
     //enough iterations have passed that we can print the latest data
@@ -364,7 +365,7 @@ sensor_status_t DOFSensor::collectData( int altitude )
     Serial.println("---------------PEAK-----------------");
     Serial.print( this->peak );
     Serial.println("--------------------------------");
-    printPer10MData();
+    printPer1mData();
     printCount = 0;
   }
   else {
@@ -387,4 +388,55 @@ sensor_status_t DOFSensor::collectData( int altitude )
   }
 
   return SENSOR_WORKING;
+}
+
+bool DOFSensor::isFlying()
+{
+   if( firstPoll )
+  {
+    timeOfLastPoll = micros();
+    ACCEL_VEL_TRANSITION =  (double)(BNO055_SAMPLERATE_DELAY_MS) / 1000.0;
+    firstPoll = false;
+  }
+  else if( (micros() - timeOfLastPoll) < (BNO055_SAMPLERATE_DELAY_MS * 1000) )
+  {
+    return SENSOR_WORKING; // skip this. It is too fast
+  }
+  else
+  {
+    ACCEL_VEL_TRANSITION =  (double)((micros() - timeOfLastPoll)/1000) / 1000.0;
+    timeOfLastPoll = micros();
+  }
+  sensors_event_t orientationData , linearAccelData;
+  bno.getEvent(&orientationData, Adafruit_BNO055::VECTOR_EULER);
+  //  bno.getEvent(&angVelData, Adafruit_BNO055::VECTOR_GYROSCOPE);
+  bno.getEvent(&linearAccelData, Adafruit_BNO055::VECTOR_LINEARACCEL);
+
+  xPos = xPos + ACCEL_POS_TRANSITION * linearAccelData.acceleration.x;
+  yPos = yPos + ACCEL_POS_TRANSITION * linearAccelData.acceleration.y;
+
+  // velocity of sensor in the direction it's facing
+  headingVel = ACCEL_VEL_TRANSITION * linearAccelData.acceleration.y / cos(DEG_2_RAD * orientationData.orientation.x);
+
+  if( headingVel > 10000 || headingVel < -10000)
+  {
+     return false; //THROW OUT NOISE
+  }
+
+  static int8_t highCounter = 0;
+  if( headingVel > .10 )
+  {
+    highCounter++;
+  }
+  else
+  {
+    highCounter = 0;
+  }
+  if( highCounter >= 2 )
+  {
+    return true;
+  }
+
+  return false;
+
 }
