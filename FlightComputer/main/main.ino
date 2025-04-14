@@ -4,6 +4,11 @@
 #include "altitudeSensor.h"
 #include "temperatureSensor.h"
 #include "RFManager.h"
+#include <SPI.h>
+#include <RH_RF95.h>
+#include <RHReliableDatagram.h>
+
+
 
 #define DEBUG 1
 #define RelayPin 25
