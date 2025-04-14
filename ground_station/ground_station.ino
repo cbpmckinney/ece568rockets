@@ -9,9 +9,11 @@ William Li
 
 #include <Adafruit_SH110X.h>
 #include <RotaryEncoder.h>
-#include "MainScreen.h"
-#include "AuxiliaryScreen.h"
-#include "OLEDScreenTests.h"
+//#include "MainScreen.h"
+//#include "AuxiliaryScreen.h"
+//#include "OLEDScreenTests.h"
+#include "RFManager.h"
+
 
 // Launch Code
 #define PIN_VALUE_1 2
@@ -42,10 +44,10 @@ enum STATE
 STATE state = ERR;
 
 // Screens
-MainScreen mainScreen = MainScreen();
-AuxiliaryScreen auxScreen = AuxiliaryScreen();
-LocalData groundStationData;
-RocketData receivedRocketData;
+//MainScreen mainScreen = MainScreen();
+//AuxiliaryScreen auxScreen = AuxiliaryScreen();
+//LocalData groundStationData;
+//RocketData receivedRocketData;
 uint8_t* pin = NULL;
 
 unsigned long lastButtonPressTime = 0;
@@ -63,7 +65,7 @@ void setup() {
 
   Serial.println("Serial started!");
 
-  initializeScreens();
+  //initializeScreens();
 
   encoder = new RotaryEncoder(ROTARY_PIN_B, ROTARY_PIN_A, RotaryEncoder::LatchMode::TWO03);
   attachInterrupt(digitalPinToInterrupt(ROTARY_PIN_A), checkEncoderPosition, CHANGE);
@@ -71,6 +73,9 @@ void setup() {
 }
 
 void loop() {
+
+  static uint8_t statbuf[3];  // buffer for receiving status messages
+
   // Switch, only one state processed per main operating loop
 
   switch(state) {
@@ -81,7 +86,17 @@ void loop() {
 
     case CONN_WAIT:
       // Verify connection to rocket
-      state = SAFE;
+
+      rfManager.receiveStatus(&statbuf);
+
+      if (statbuf[2] == 1)
+        {
+        Serial.println("Rocket in safe mode, message received!!");
+          state = SAFE;
+        }
+
+
+
       break;
 
     // SAFE---------------------------------------
@@ -98,50 +113,50 @@ void loop() {
       */
 
       // If data screen enabled
-      updateDataDisplay();
+      //updateDataDisplay();
 
       // Process user input
-      processUserInput();
+      //processUserInput();
 
       break;
 
     // ARM---------------------------------------
     case ARM:
-      if (keyInserted()) {
-        mainScreen.key_inserted = true;
-      } 
-      else
-      {
-        mainScreen.key_inserted = false;
-      }
+      //if (keyInserted()) {
+      //  mainScreen.key_inserted = true;
+      //} 
+      //else
+      //{
+      //  mainScreen.key_inserted = false;
+      //}
 
-      if (mainScreen.ready_to_submit_pin) {
+      //if (mainScreen.ready_to_submit_pin) {
         // User is about to submit pin, check if correct as
         // changes cannot be made now
-        pin = mainScreen.getInputPin();
+      //  pin = mainScreen.getInputPin();
 
-        if (validatePin(pin)) {
-          mainScreen.pin_correct = true;
-        }
-      }
+      //  if (validatePin(pin)) {
+      //    mainScreen.pin_correct = true;
+      //  }
+      //}
 
-      if (mainScreen.prime_permissive) {
+      //if (mainScreen.prime_permissive) {
         // User (screen) gave go-ahead on priming rocket.
         // Send message to rocket signifying ground station ready to PRIME
         //  *requires a response back
         //  Update LED on ground station to signify rocket is primed
         // Make big red button glow
-        state = PRIME;
-      }
+      //  state = PRIME;
+      //}
 
       // Process user input
-      processUserInput();
+      //processUserInput();
       
     // PRIME---------------------------------------
     case PRIME:
       Serial.println("PRIME");
 
-      processUserInput();
+      //processUserInput();
 
     case FIRE:
       Serial.println("FIRE");
