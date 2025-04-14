@@ -65,6 +65,7 @@ void RFManager::tx(char *str_num, int size) {
   }
 
   rf95.send((uint8_t *)str_num, size); // might have to adjust packet size
+  delay(1);
 }
 
 // for both rocket and ground station,
@@ -80,6 +81,10 @@ void RFManager::sendStatus( sensorStatus currStatus, rocket_states_t currState  
     toSendArray[0] = STATUS;
     toSendArray[1] = currStatus.byte;
     toSendArray[2] = currState;
+    Serial.println(toSendArray[0]);
+    Serial.println(toSendArray[1]);
+    Serial.println(toSendArray[2]);
+
     this->tx((char *)toSendArray, 3);
  }
 
@@ -115,10 +120,12 @@ bool RFManager::receivedCommand( packet_type_t commandToReceive )
 {
     if( rf95.available())
     {
+      Serial.println("RX Cmd...");
       uint8_t buf[1];
       uint8_t len = sizeof(buf);
       if( rf95.recv(buf, &len) )
       {
+        Serial.println(buf[0]);
         if( buf[0] == commandToReceive )
         {
             return true;
