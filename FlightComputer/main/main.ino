@@ -33,28 +33,33 @@ void loop() {
   static bool launchCommandReceived = false;
   static bool verifyDataCommandReceived = false;
   static bool reinitializeCommandReceived = false;
-#define DEBUG 1
-#ifdef DEBUG
-  static bool firstEntry = true;
-#endif
+  #define DEBUG 1
+  #ifdef DEBUG
+    static bool firstEntry = true;
+  #endif
 
   switch( currRocketState )
   {
       case POWERONFAILURE:
-
+        #ifdef DEBUG
+          Serial.println("Power On Failure...");
+          Serial.println("Going back to BOOTUP");
+        #endif
+        currRocketState = BOOTUP;
+        delay(1000);
         break;
       case BOOTUP:
-      #ifdef DEBUG
-        if( firstEntry )
-        {
-          firstEntry = false;
-          Serial.println("ROCKET IN BOOTUP");
-        }
-      #endif
-        statusByte.bits.dof_sensor         = dofSensor.initialize();
+        #ifdef DEBUG
+          if( firstEntry )
+          {
+            firstEntry = false;
+            Serial.println("ROCKET IN BOOTUP");
+          }
+        #endif
+        // statusByte.bits.dof_sensor         = dofSensor.initialize();   // testing without DOF
         statusByte.bits.altitude_sensor    = altitude_sensor.initialize();
         statusByte.bits.temperature_sensor = temperature_sensor.initialize();
-        statusByte.bits.gps                = gps.initialize(); //use to initialize altitude sensor? IDK
+        statusByte.bits.gps                = gps.initialize(); 
         statusByte.bits.RFtransmitter      = rfManager.initialize();
         if(statusByte.byte == 0)
         {
@@ -100,15 +105,19 @@ void loop() {
         break;
 
       case ARM:
-      #ifdef DEBUG
-          if( firstEntry )
-          {
-            firstEntry = false;
-            Serial.println("ROCKET IN ARM");
-          }
-      #endif
-      // receive cmd to put rocket in ready to launch mode:
-      if( rfManager.receivedCommand( RTL_PACKET ) )
+        #ifdef DEBUG
+            if( firstEntry )
+            {
+              firstEntry = false;
+              Serial.println("ROCKET IN ARM");
+            }
+        #endif
+        statusByte.bits.dof_sensor         = dofSensor.setInitialDataValues();
+        statusByte.bits.altitude_sensor    = altitude_sensor.setInitialDataValues();
+        statusByte.bits.temperature_sensor = temperature_sensor.setInitialDataValues();
+        statusByte.bits.gps                = gps.setInitialDataValues();
+        // receive cmd to put rocket in ready to launch mode:
+        if( rfManager.receivedCommand( RTL_PACKET ) )
         {
           Serial.println("--Ready to Launch-- Packet Received from Ground Station");
           readyCommandReceived = true;
@@ -123,19 +132,19 @@ void loop() {
         } 
         break;
       case READY_FOR_LAUNCH:
-      #ifdef DEBUG
-          if( firstEntry )
-          {
-            firstEntry = false;
-            Serial.println("Ready for launch!");
-          }
+        #ifdef DEBUG
+            if( firstEntry )
+            {
+              firstEntry = false;
+              Serial.println("Ready for launch!");
+            }
         #endif
-      // receive cmd to put rocket in ready to launch mode:
-      if( rfManager.receivedCommand( LAUNCH_PACKET ) )
-        {
-          Serial.println("--Launch-- Packet Received from Ground Station");
-          launchCommandReceived = true;
-        }
+        // receive cmd to put rocket in ready to launch mode:
+        if( rfManager.receivedCommand( LAUNCH_PACKET ) )
+          {
+            Serial.println("--Launch-- Packet Received from Ground Station");
+            launchCommandReceived = true;
+          }
         if ( launchCommandReceived ) {
           #ifdef DEBUG
             firstEntry = true;
@@ -146,12 +155,12 @@ void loop() {
         } 
         break;
       case LAUNCH:
-      #ifdef DEBUG
-        if ( firstEntry )
-        {
-          firstEntry = false;
-          Serial.println("Launching...");
-        }
+        #ifdef DEBUG
+          if ( firstEntry )
+          {
+            firstEntry = false;
+            Serial.println("Launching...");
+          }
         #endif
         break;
       default:
