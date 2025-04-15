@@ -35,6 +35,7 @@ int len;
 // for rocket,
 sensor_status_t RFManager::initialize() {
   if (!rf95.init()) {
+    Serial.println("LoRa init FAILURE");
     return SENSOR_NOT_WORKING;
   }
   Serial.println("LoRa init SUCCESS");
@@ -53,7 +54,7 @@ sensor_status_t RFManager::initialize() {
 // for both rocket and ground station,
 void RFManager::tx(char *str_num, int size) {
   // use itoa() if we decide to work with integers to strings (we have floats right now)
-  Serial.print("Sending "); Serial.print(str_num); Serial.println(" as a string");
+  //Serial.print("Sending "); Serial.print(str_num); Serial.println(" as a string");
   for( int i = 0; i < size; i++ )
   {
     if( sentDataIndex < 200000)
@@ -64,14 +65,129 @@ void RFManager::tx(char *str_num, int size) {
     sentData[sentDataIndex] = TRANSMIT_BREAK;
   }
 
+  #ifdef TEST_MODE_ON_GROUND
+  Serial.println( "Transmitting: ");
+  Serial.print( "PACKET TYPE: ");
+  switch( str_num[0] )
+  {
+    case STATUS:
+      Serial.println( "STATUS");
+      Serial.print( "STATUS BYTE: ");
+      Serial.println( (uint8_t)str_num[1] );
+      Serial.print( "STATE BYTE: ");
+      Serial.println( (uint8_t)str_num[2] );
+      break;
+    case FAIL:
+      Serial.println( "FAIL");
+      break;
+    case M_DATA_PACKET:
+      Serial.println( "M_DATA");
+      printDataType(str_num[1]);
+      Serial.print( "At Altitude: ");
+      Serial.println( str_num[2]);
+      float sentFloatMdata;
+      memcpy(&sentFloatMdata, &str_num[3], sizeof(float));
+      Serial.print( "WITH VALUE: ");
+      Serial.println(  sentFloatMdata );
+      break; //1 m data
+
+    case PEAK_DATA_PACKET:
+    case AVERAGE_DATA_PACKET:
+    case ALTITUDE_PACKET:
+      if( str_num[0] == PEAK_DATA_PACKET)
+        Serial.println( "PEAK_DATA_PACKET");
+      else if( str_num[0] == AVERAGE_DATA_PACKET)
+        Serial.println( "AVERAGE_DATA_PACKET");
+      else if( str_num[0] == ALTITUDE_PACKET )
+        Serial.println( "ALTITUDE_PACKET");
+      printDataType((uint8_t)str_num[1]);
+      float sentFloat;
+      memcpy(&sentFloat, &str_num[3], sizeof(float));
+      Serial.print( "WITH VALUE: ");
+      Serial.println(  sentFloat );
+      break;
+  }
+  #endif
+
   rf95.send((uint8_t *)str_num, size); // might have to adjust packet size
   delay(1);
+}
+
+
+void RFManager::printDataType(char toPrint) {
+  Serial.print( "Data type: ");
+  switch (toPrint) {
+    case VELOCITY:
+      Serial.println("VELOCITY");
+      break;
+    case ALTITUDE_TEMPERATURE:
+      Serial.println("ALTITUDE_TEMPERATURE");
+      break;
+    case ALTITUDE_PRESSURE:
+      Serial.println("ALTITUDE_PRESSURE");
+      break;
+    case TEMPERATURE_TEMPERATURE:
+      Serial.println("TEMPERATURE_TEMPERATURE");
+      break;
+    case TEMPERATURE_HUMIDITY:
+      Serial.println("TEMPERATURE_HUMIDITY");
+      break;
+    case ALTITUDE:
+      Serial.println("ALTITUDE");
+      break;
+    default:
+      Serial.println("UNKNOWN");
+      break;
+  }
 }
 
 // for both rocket and ground station,
 void RFManager::txNoSave(char *str_num, int size) {
   // use itoa() if we decide to work with integers to strings (we have floats right now)
-  Serial.print("Sending "); Serial.print(str_num); Serial.println(" as a string");
+  //Serial.print("Sending "); Serial.print(str_num); Serial.println(" as a string");
+  #ifdef TEST_MODE_ON_GROUND
+  Serial.println( "Transmitting: ");
+  Serial.print( "PACKET TYPE: ");
+  switch( str_num[0] )
+  {
+    case STATUS:
+      Serial.println( "STATUS");
+      Serial.print( "STATUS BYTE: ");
+      Serial.println( str_num[1] );
+      Serial.print( "STATE BYTE: ");
+      Serial.println( str_num[2] );
+      break;
+    case FAIL:
+      Serial.println( "FAIL");
+      break;
+    case M_DATA_PACKET:
+      Serial.println( "M_DATA");
+      printDataType(str_num[1]);
+      Serial.print( "At Altitude: ");
+      Serial.println( str_num[2]);
+      float sentFloatMdata;
+      memcpy(&sentFloatMdata, &str_num[3], sizeof(float));
+      Serial.print( "WITH VALUE: ");
+      Serial.println(  sentFloatMdata );
+      break; //1 m data
+
+    case PEAK_DATA_PACKET:
+    case AVERAGE_DATA_PACKET:
+    case ALTITUDE_PACKET:
+      if( str_num[0] == PEAK_DATA_PACKET)
+        Serial.println( "PEAK_DATA_PACKET");
+      else if( str_num[0] == AVERAGE_DATA_PACKET)
+        Serial.println( "AVERAGE_DATA_PACKET");
+      else if( str_num[0] == ALTITUDE_PACKET )
+        Serial.println( "ALTITUDE_PACKET");
+      printDataType(str_num[1]);
+      float sentFloat;
+      memcpy(&sentFloat, &str_num[3], sizeof(float));
+      Serial.print( "WITH VALUE: ");
+      Serial.println(  sentFloat );
+      break;
+  }
+  #endif
   rf95.send((uint8_t *)str_num, size); // might have to adjust packet size
 }
 
@@ -81,9 +197,9 @@ void RFManager::sendStatus( sensorStatus currStatus, rocket_states_t currState  
     toSendArray[0] = STATUS;
     toSendArray[1] = currStatus.byte;
     toSendArray[2] = currState;
-    Serial.println(toSendArray[0]);
-    Serial.println(toSendArray[1]);
-    Serial.println(toSendArray[2]);
+    // Serial.println(toSendArray[0]);
+    // Serial.println(toSendArray[1]);
+    // Serial.println(toSendArray[2]);
 
     this->tx((char *)toSendArray, 3);
  }
@@ -283,9 +399,9 @@ sensor_status_t RFManager::transmitData(DOFSensor& dofSensor, AltitudeSensor& al
   }
 
   static float altitudeReported = 0;
-  if( altitudeReported != altitude_sensor.currAltitude)
+  if( altitudeReported != altitude_sensor.currAltitudeDifferenceSinceStart)
   {
-    transmitAltitude( altitude_sensor.currAltitude, ALTITUDE );
+    transmitAltitude( altitude_sensor.currAltitudeDifferenceSinceStart, ALTITUDE );
     altitudeReported = temperature_sensor.averageTemperature;
   }
 

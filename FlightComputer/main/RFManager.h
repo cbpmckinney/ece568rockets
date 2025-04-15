@@ -44,6 +44,7 @@ class RFManager
       void transmitAverage( float data, data_type_t dataType );
       void transmitPeak( float data, data_type_t dataType );
       void retransmitData( );
+      void printDataType( char toprint);
       int8_t sentData[ 200000 ];
       uint32_t sentDataIndex;
     private:
