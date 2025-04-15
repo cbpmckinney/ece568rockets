@@ -115,12 +115,12 @@ void loop() {
             {
               firstEntry = false;
               Serial.println("ROCKET IN ARM");
+              statusByte.bits.dof_sensor         = dofSensor.setInitialDataValues();
+              statusByte.bits.altitude_sensor    = altitude_sensor.setInitialDataValues();
+              statusByte.bits.temperature_sensor = temperature_sensor.setInitialDataValues();
+              statusByte.bits.gps                = gps.setInitialDataValues();
             }
         #endif
-        statusByte.bits.dof_sensor         = dofSensor.setInitialDataValues();
-        statusByte.bits.altitude_sensor    = altitude_sensor.setInitialDataValues();
-        statusByte.bits.temperature_sensor = temperature_sensor.setInitialDataValues();
-        statusByte.bits.gps                = gps.setInitialDataValues();
         // receive cmd to put rocket in ready to launch mode:
         if( rfManager.receivedCommand( RTL_PACKET ) )
         {
@@ -164,105 +164,46 @@ void loop() {
           if ( firstEntry )
           {
             firstEntry = false;
-            Serial.println("Launching...");
+            Serial.println("ROCKET IN LAUNCH");
           }
         #endif
+  //    digitalWrite(RelayPin, HIGH); // fires relay
+        // need to set this back to low, perhaps when flying?
+  //    if( dofSensor.isFlying() )
+  //    {
+    //    #ifdef DEBUG
+    //      firstEntry = true;
+    //    #endif
+    //    currRocketState = FLIGHT;
+    //    rfManager.sendStatus( statusByte, currRocketState );
+  //    }
         break;
-      default:
-        Serial.println("ERROR");
-        break;
+
+      case FLIGHT:
+        #ifdef DEBUG
+          if( firstEntry )
+          {
+            firstEntry = false;
+            Serial.println("ROCKET IN FLIGHT");
+          }
+        #endif
+          static uint8_t simAlt = 0; // REPLACE WITH ACTUAL CURRENT ALTITUDE
+          statusByte.bits.altitude_sensor    = altitude_sensor.collectData( );
+          statusByte.bits.temperature_sensor = temperature_sensor.collectData( altitude_sensor.currAltitude );
+          statusByte.bits.dof_sensor         = dofSensor.collectData( altitude_sensor.currAltitude );
+          statusByte.bits.gps                = gps.collectData(); // probably just velocity
         
-      // #ifdef DEBUG
-      //   if( firstEntry )
-      //   {
-      //     firstEntry = false;
-      //     Serial.println("ROCKET IN ARM");
-      //   }
-      // #endif
-      //   statusByte.bits.dof_sensor         = dofSensor.setInitialDataValues();
-      //   statusByte.bits.altitude_sensor    = altitude_sensor.setInitialDataValues();
-      //   statusByte.bits.temperature_sensor = temperature_sensor.setInitialDataValues();
-      //   statusByte.bits.gps                = gps.setInitialDataValues();
-      //   if(statusByte.byte == 0)
-      //   {
-      //   #ifdef DEBUG
-      //     firstEntry = true;
-      //   #endif
-      //     currRocketState = READY_FOR_LAUNCH;
-      //     rfManager.sendStatus( statusByte, currRocketState );
-      //   }
-      //   break;
-
-      // case READY_FOR_LAUNCH:
-      // #ifdef DEBUG
-      //   if( firstEntry )
-      //   {
-      //     firstEntry = false;
-      //     Serial.println("ROCKET IN READY_FOR_LAUNCH");
-      //   }
-
-      //   if( rfManager.receivedCommand( LAUNCH_PACKET ) )
-      //   {
-      //     launchCommandReceived = true;
-      //   }
-      // #endif
-      //   if( launchCommandReceived )
-      //   {
-      //   #ifdef DEBUG
-      //     firstEntry = true;
-      //   #endif
-      //     currRocketState = LAUNCH;
-      //     rfManager.sendStatus( statusByte, currRocketState );
-      //   }
-      //   break;
-
-      // case LAUNCH:
-      // #ifdef DEBUG
-      //   if( firstEntry )
-      //   {
-      //     firstEntry = false;
-      //     Serial.println("ROCKET IN LAUNCH");
-      //   }
-      // #endif
-
-      //   // digitalWrite(RelayPin, HIGH); fires relay
-      //   // need to set this back to low, perhaps when flying?
-      //   if( dofSensor.isFlying() )
-      //   {
-      //   #ifdef DEBUG
-      //     firstEntry = true;
-      //   #endif
-      //     currRocketState = FLIGHT;
-      //     rfManager.sendStatus( statusByte, currRocketState );
-      //   }
-      //   break;
-
-      // case FLIGHT:
-      // #ifdef DEBUG
-      //   if( firstEntry )
-      //   {
-      //     firstEntry = false;
-      //     Serial.println("ROCKET IN FLIGHT");
-      //   }
-      // #endif
-      //   static uint8_t simAlt = 0; // REPLACE WITH ACTUAL CURRENT ALTITUDE
-      //   statusByte.bits.altitude_sensor    = altitude_sensor.collectData( );
-      //   statusByte.bits.temperature_sensor = temperature_sensor.collectData( altitude_sensor.currAltitude );
-      //   statusByte.bits.dof_sensor         = dofSensor.collectData( altitude_sensor.currAltitude );
-      //   statusByte.bits.gps                = gps.collectData(); // probably just velocity
-        
-      //   statusByte.bits.RFtransmitter          = rfManager.transmitData( dofSensor, altitude_sensor, temperature_sensor, gps );
-
-      //   //COMMENT THIS NEXT SECTION OUT IF YOU ARE RUNNING ON YOUR COMPUTER ON THE GROUND OR IT WILL INSTANTLY TRANSITION
-      //   if( dofSensor.doneFlying )
-      //   {
-      //   #ifdef DEBUG
-      //      firstEntry = true;
-      //   #endif
-      //      currRocketState = RECOVERY;
-      //      rfManager.sendStatus( statusByte, currRocketState );
-      //   }
-      //   break;
+          statusByte.bits.RFtransmitter          = rfManager.transmitData( dofSensor, altitude_sensor, temperature_sensor, gps );
+        //   COMMENT THIS NEXT SECTION OUT IF YOU ARE RUNNING ON YOUR COMPUTER ON THE GROUND OR IT WILL INSTANTLY TRANSITION
+        //   if( dofSensor.doneFlying )
+        //   {
+        //   #ifdef DEBUG
+        //      firstEntry = true;
+        //   #endif
+        //      currRocketState = RECOVERY;
+        //      rfManager.sendStatus( statusByte, currRocketState );
+        //   }
+          break;
         
       // case RECOVERY:
       // #ifdef DEBUG
@@ -309,6 +250,9 @@ void loop() {
       //     rfManager.sendStatus( statusByte, currRocketState );
       //   }
       //   break;
+      default:
+        Serial.println("ERROR");
+        break;
   }
 
 
