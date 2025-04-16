@@ -33,34 +33,34 @@ void MainScreen::initialize(uint8_t i2caddr) {
     clearDisplay();
 
     // Set up menuOptions
-    menuOptions[0] = {DATA, 7, 0};
-    menuOptions[1] = {LAUNCH, 7, 1};
-    menuOptions[2] = {SLEEP, 7, 2};
-    menuOptions[3] = {SETTINGS, 7, 3};
+    menuOptions[0] = {ScreenEnums::Screen::DATA, 7, 0};
+    menuOptions[1] = {ScreenEnums::Screen::LAUNCH, 7, 1};
+    menuOptions[2] = {ScreenEnums::Screen::SLEEP, 7, 2};
+    menuOptions[3] = {ScreenEnums::Screen::SETTINGS, 7, 3};
 
     // Set up dataOptions
-    dataOptions[0] = {LOCAL, 5, 4}; // LOCAL
-    dataOptions[1] = {ROCKET, 6, 5}; // ROCKET
-    dataOptions[2] = {NONE, 5, 6};
+    dataOptions[0] = {ScreenEnums::Screen::LOCAL, 5, 4}; // LOCAL
+    dataOptions[1] = {ScreenEnums::Screen::ROCKET, 6, 5}; // ROCKET
+    dataOptions[2] = {ScreenEnums::Screen::NONE, 5, 6};
 
     // Set up launchOptions
-    launchOptions[0] = {LAUNCH_WAIT, 3, 4}; // Y
-    launchOptions[1] = {MENU, 6, 4}; // N
+    launchOptions[0] = {ScreenEnums::Screen::LAUNCH_WAIT, 3, 4}; // Y
+    launchOptions[1] = {ScreenEnums::Screen::MENU, 6, 4}; // N
 
     // Set up launchWaitOptions
-    launchWaitOptions[0] = {MENU, 5, 6}; // MENU
+    launchWaitOptions[0] = {ScreenEnums::Screen::MENU, 5, 6}; // MENU
 
     // Set up launchSeqOptions
-    launchSeqOptions[0] = {NONE, 2, 5, 3, 10}; // NUM
-    launchSeqOptions[1] = {NONE, 4, 5, 7, 10}; // NUM
-    launchSeqOptions[2] = {NONE, 6, 5, 11, 10}; // NUM
-    launchSeqOptions[3] = {LAUNCH_BIG_RED, 5, 7}; // Submit
+    launchSeqOptions[0] = {ScreenEnums::Screen::NONE, 2, 5, 3, 10}; // NUM
+    launchSeqOptions[1] = {ScreenEnums::Screen::NONE, 4, 5, 7, 10}; // NUM
+    launchSeqOptions[2] = {ScreenEnums::Screen::NONE, 6, 5, 11, 10}; // NUM
+    launchSeqOptions[3] = {ScreenEnums::Screen::LAUNCH_BIG_RED, 5, 7}; // Submit
 
     // Set up launchWrongPinOptions
-    launchBigRedOptions[0] = {MENU, 5, 6}; // MENU
+    launchBigRedOptions[0] = {ScreenEnums::Screen::MENU, 5, 6}; // MENU
 
     // Set up launchWrongPinOptions
-    launchWrongPinOptions[0] = {MENU, 5, 6}; // MENU
+    launchWrongPinOptions[0] = {ScreenEnums::Screen::MENU, 5, 6}; // MENU
 }
 
 void MainScreen::clearDisplay() {
@@ -69,7 +69,7 @@ void MainScreen::clearDisplay() {
 }
 
 void MainScreen::showMenu() {
-    currentScreen = MENU;
+    currentScreen = ScreenEnums::Screen::MENU;
 
     clearDisplay();
     display.setTextSize(2);
@@ -88,7 +88,7 @@ void MainScreen::showMenu() {
 }
 
 void MainScreen::showDataScreen() {
-    currentScreen = DATA;
+    currentScreen = ScreenEnums::Screen::DATA;
 
     clearDisplay();
     display.setTextSize(2);
@@ -107,7 +107,7 @@ void MainScreen::showDataScreen() {
 }
 
 void MainScreen::showLaunch() {
-    currentScreen = LAUNCH;
+    currentScreen = ScreenEnums::Screen::LAUNCH;
 
     clearDisplay();
     display.setTextSize(2);
@@ -126,10 +126,10 @@ void MainScreen::showLaunch() {
 void MainScreen::showLaunchWait() {
     if (rocket_armed) {
         // Skip wait screen, override to LAUNCH_SEQ
-        jumpToScreen(LAUNCH_SEQ);
+        jumpToScreen(ScreenEnums::Screen::LAUNCH_SEQ);
     } else
     {
-        currentScreen = LAUNCH_WAIT;
+        currentScreen = ScreenEnums::Screen::LAUNCH_WAIT;
 
         clearDisplay();
         display.setTextSize(2);
@@ -145,7 +145,7 @@ void MainScreen::showLaunchWait() {
 }
 
 void MainScreen::showLaunchSeq() {
-    currentScreen = LAUNCH_SEQ;
+    currentScreen = ScreenEnums::Screen::LAUNCH_SEQ;
 
     clearDisplay();
 
@@ -185,7 +185,7 @@ void MainScreen::showLaunchSeq() {
 }
 
 void MainScreen::showLaunchBigRed() {
-    currentScreen = LAUNCH_BIG_RED;
+    currentScreen = ScreenEnums::Screen::LAUNCH_BIG_RED;
 
     clearDisplay();
     display.setTextSize(2);
@@ -200,7 +200,7 @@ void MainScreen::showLaunchBigRed() {
 }
 
 void MainScreen::showLaunchWrongPin() {
-    currentScreen = LAUNCH_WRONG_PIN;
+    currentScreen = ScreenEnums::Screen::LAUNCH_WRONG_PIN;
 
     clearDisplay();
     display.setTextSize(2);
@@ -214,39 +214,39 @@ void MainScreen::showLaunchWrongPin() {
     display.display();
 }
 
-void MainScreen::jumpToScreen(Screen screen) {
+void MainScreen::jumpToScreen(ScreenEnums::Screen screen) {
     Serial.print("In jump to screen, going to: "); Serial.println(screen);
     switch (screen) {
-        case MENU:
+        case ScreenEnums::Screen::MENU:
             Serial.println("Jumped to MENU");
             showMenu();
             break;
-        case DATA:
+        case ScreenEnums::Screen::DATA:
             Serial.println("Jumped to DATA");
             showDataScreen();
             break;
-        case LAUNCH:
+        case ScreenEnums::Screen::LAUNCH:
             Serial.println("Jumped to LAUNCH");
             showLaunch();
             break;
-        case LAUNCH_WAIT:
+        case ScreenEnums::Screen::LAUNCH_WAIT:
             Serial.println("Jumped to LAUNCH WAIT");
             showLaunchWait();
             break;
-        case LAUNCH_SEQ:
+        case ScreenEnums::Screen::LAUNCH_SEQ:
             Serial.println("Jumped to LAUNCH SEQ");
             showLaunchSeq();
             break;
-        case LAUNCH_BIG_RED:
+        case ScreenEnums::Screen::LAUNCH_BIG_RED:
             Serial.println("Jumped to LAUNCH BIG RED");
             showLaunchBigRed();
             break;
-        case LAUNCH_WRONG_PIN:
+        case ScreenEnums::Screen::LAUNCH_WRONG_PIN:
             Serial.println("Jumped to LAUNCH WRONG PIN");
             showLaunchWrongPin();
             //TODO
             break;
-        case SETTINGS:
+        case ScreenEnums::Screen::SETTINGS:
             //TODO
             break;
         default:
@@ -264,51 +264,51 @@ void MainScreen::receiveScreenInput(UserInput input) {
     ScreenNavInfo* screenNavInfo = NULL;
     uint8_t prev_x_index = 255;
     uint8_t prev_y_index = 255;
-    Screen targetScreen;
+    ScreenEnums::Screen targetScreen;
 
     // Grab information related to current screen.
     if (input == ENC_LEFT or input == ENC_RIGHT or input == ENC_PRESS) {
         switch (currentScreen) {
-            case MENU:
+            case ScreenEnums::Screen::MENU:
                 cursorIndex = &screenCursorIndexes.menuIndex;
                 maxScreenIndex = &screenCursorIndexes.menuMaxIndex;
                 screenNavInfo = menuOptions;
                 break;
-            case DATA:
+            case ScreenEnums::Screen::DATA:
                 cursorIndex = &screenCursorIndexes.dataIndex;
                 maxScreenIndex = &screenCursorIndexes.dataMaxIndex;
                 screenNavInfo = dataOptions;
                 break;
-            case LAUNCH:
+            case ScreenEnums::Screen::LAUNCH:
                 cursorIndex = &screenCursorIndexes.launchIndex;
                 maxScreenIndex = &screenCursorIndexes.launchMaxIndex;
                 screenNavInfo = launchOptions;
                 break;
-            case LAUNCH_WAIT:
+            case ScreenEnums::Screen::LAUNCH_WAIT:
                 cursorIndex = &screenCursorIndexes.launchWaitIndex;
                 maxScreenIndex = &screenCursorIndexes.launchWaitMaxIndex;
                 screenNavInfo = launchWaitOptions;
                 break;
-            case LAUNCH_SEQ:
+            case ScreenEnums::Screen::LAUNCH_SEQ:
                 cursorIndex = &screenCursorIndexes.launchSeqIndex;
                 maxScreenIndex = &screenCursorIndexes.launchSeqMaxIndex;
                 screenNavInfo = launchSeqOptions;
                 break;
-            case LAUNCH_BIG_RED:
+            case ScreenEnums::Screen::LAUNCH_BIG_RED:
                 cursorIndex = &screenCursorIndexes.launchBigRedIndex;
                 maxScreenIndex = &screenCursorIndexes.launchBigRedMaxIndex;
                 screenNavInfo = launchBigRedOptions;
                 break;
-            case LAUNCH_WRONG_PIN:
+            case ScreenEnums::Screen::LAUNCH_WRONG_PIN:
                 cursorIndex = &screenCursorIndexes.launchWrongPinIndex;
                 maxScreenIndex = &screenCursorIndexes.launchWrongPinMaxIndex;
                 screenNavInfo = launchWrongPinOptions;
                 break;
-            case SLEEP:
+            case ScreenEnums::Screen::SLEEP:
                 cursorIndex = &screenCursorIndexes.sleepIndex;
                 maxScreenIndex = &screenCursorIndexes.sleepMaxIndex;
                 break;
-            case SETTINGS:
+            case ScreenEnums::Screen::SETTINGS:
                 cursorIndex = &screenCursorIndexes.settingsIndex;
                 maxScreenIndex = &screenCursorIndexes.settingsMaxIndex;
                 break;
@@ -324,7 +324,7 @@ void MainScreen::receiveScreenInput(UserInput input) {
         case ENC_LEFT:
             // if encoder turned left, decrement index by one and update cursor location
             
-                if (currentScreen != LAUNCH_SEQ) 
+                if (currentScreen != ScreenEnums::Screen::LAUNCH_SEQ) 
                 {
                     if (*cursorIndex > 0) {
                     prev_x_index = screenNavInfo[*cursorIndex].cursor_x_index;
@@ -338,7 +338,7 @@ void MainScreen::receiveScreenInput(UserInput input) {
                                             prev_y_index);
                     }
                 }
-                else if (currentScreen == LAUNCH_SEQ)
+                else if (currentScreen == ScreenEnums::Screen::LAUNCH_SEQ)
                 {
                     if (pin[*cursorIndex] > 0) {
                         uint8_t prev_pin_value = pin[*cursorIndex];
@@ -355,7 +355,7 @@ void MainScreen::receiveScreenInput(UserInput input) {
         case ENC_RIGHT:
             // if encoder turned right, increment index by one and update cursor location
             
-                if (currentScreen != LAUNCH_SEQ) 
+                if (currentScreen != ScreenEnums::Screen::LAUNCH_SEQ) 
                 {
                     if (*cursorIndex < *maxScreenIndex) {
                         prev_x_index = screenNavInfo[*cursorIndex].cursor_x_index;
@@ -369,7 +369,7 @@ void MainScreen::receiveScreenInput(UserInput input) {
                                                 prev_y_index);
                     }
                 } 
-                else if (currentScreen == LAUNCH_SEQ)
+                else if (currentScreen == ScreenEnums::Screen::LAUNCH_SEQ)
                 {
                     Serial.print("  Orig Pin value: "); Serial.println(pin[*cursorIndex]);
                     if (pin[*cursorIndex] < 9) {
@@ -388,14 +388,14 @@ void MainScreen::receiveScreenInput(UserInput input) {
         case ENC_PRESS:
             targetScreen = screenNavInfo[*cursorIndex].nextScreen;
 
-            if (currentScreen != LAUNCH_SEQ and currentScreen != DATA) 
+            if (currentScreen != ScreenEnums::Screen::LAUNCH_SEQ and currentScreen != ScreenEnums::Screen::DATA) 
             {
                 Serial.print("Jumping to: "); Serial.println(targetScreen);
                 jumpToScreen(targetScreen);
             } 
-            else if (currentScreen == LAUNCH_SEQ) 
+            else if (currentScreen == ScreenEnums::Screen::LAUNCH_SEQ) 
             {
-                if (targetScreen == NONE) {
+                if (targetScreen == ScreenEnums::Screen::NONE) {
                     // Currently looking at pin input. Need to update pin values
                     prev_x_index = screenNavInfo[*cursorIndex].cursor_x_index;
                     prev_y_index = screenNavInfo[*cursorIndex].cursor_y_index;
@@ -425,23 +425,23 @@ void MainScreen::receiveScreenInput(UserInput input) {
                         jumpToScreen(targetScreen);
                         prime_permissive = true;
                     } else {
-                        Serial.print("Jumping to: "); Serial.println(LAUNCH_WRONG_PIN); // RED BUTTON LAUNCH SCREEN
-                        jumpToScreen(LAUNCH_WRONG_PIN);
+                        Serial.print("Jumping to: "); Serial.println(ScreenEnums::Screen::LAUNCH_WRONG_PIN); // RED BUTTON LAUNCH SCREEN
+                        jumpToScreen(ScreenEnums::Screen::LAUNCH_WRONG_PIN);
                     }
 
                     // Reset pin screen
                     pin_correct = false;
                     ready_to_submit_pin = false;
                 }
-            } else if (currentScreen == DATA) {
-                if (targetScreen == NONE) {
+            } else if (currentScreen == ScreenEnums::Screen::DATA) {
+                if (targetScreen == ScreenEnums::Screen::NONE) {
                     request_show_data = false;
                 } else {
                     request_show_data = true;
                 }
 
                 data_screen_requested = targetScreen;
-                jumpToScreen(MENU);
+                jumpToScreen(ScreenEnums::Screen::MENU);
             }
             break;
         case BIG_RED:
