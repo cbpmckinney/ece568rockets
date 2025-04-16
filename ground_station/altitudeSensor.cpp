@@ -2,7 +2,7 @@
 #include <Adafruit_Sensor.h>
 #include "altitudeSensor.h"
 #include "Adafruit_BMP3XX.h"
-
+#include "main.h"
 //#define DEBUG_ALTITUDE 1
 
 # define BMP_SCK 13
@@ -119,6 +119,8 @@ sensor_status_t AltitudeSensor::setInitialDataValues()
     this->pressureSum = 0;
     this->savedTemperatureAltitude = 0;
     this->savedPressureAltitude = 0;
+    bmp.performReading();
+    this->startingAltitude = bmp.readAltitude(1020.0);
     return SENSOR_WORKING;
 }
 
@@ -145,16 +147,21 @@ sensor_status_t AltitudeSensor::collectData( )
   }
 
   this->currAltitude = bmp.readAltitude(1020.0);
+  this->currAltitudeDifferenceSinceStart = this->currAltitude - this->startingAltitude;
+
+  #ifdef TEST_MODE_ON_GROUND
+  this->currAltitude = simAltitude;
+  #endif
 
   float currTemp = bmp.temperature;
   updateAverage(currTemp, &(this->averageTemperature), averageTemperatureDataArray, &(this->averageTempCount), &(this->currTempIndex), &(this->temperatureSum));
   updatePeak( currTemp,  &(this->peakTemperature));
-  updatePer1MDataArray( currTemp, this->currAltitude, per1mTemperatureDataArray, &(this->savedTemperatureAltitude), isTemperatureCollectedArray );
+  updatePer1MDataArray( currTemp, currAltitudeDifferenceSinceStart, per1mTemperatureDataArray, &(this->savedTemperatureAltitude), isTemperatureCollectedArray );
   
   float currPressure = (bmp.pressure / 100.0);
   updateAverage(currPressure, &(this->averagePressure), averagePressureDataArray, &(this->averagePressureCount), &(this->currPressureIndex), &(this->pressureSum));
   updatePeak( currPressure,  &(this->peakPressure));
-  updatePer1MDataArray( currPressure, this->currAltitude, per1mPressureDataArray, &(this->savedPressureAltitude), isPressureCollectedArray );
+  updatePer1MDataArray( currPressure, currAltitudeDifferenceSinceStart, per1mPressureDataArray, &(this->savedPressureAltitude), isPressureCollectedArray );
 
 #ifdef DEBUG_ALTITUDE
 if (printCount * 10 >= PRINT_DELAY_MS) {

@@ -11,6 +11,8 @@ class AltitudeSensor
         float peakTemperature;
         float peakPressure;
         float currAltitude;
+        float startingAltitude;
+        uint32_t currAltitudeDifferenceSinceStart = 0;
         float averageTemperatureDataArray[1000];
         unsigned int averageTempCount;
         unsigned int currTempIndex;
