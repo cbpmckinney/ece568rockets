@@ -74,6 +74,25 @@ int last_debounce_time = 0;
 int last_button_state = 0;
 int debounce_delay = 50; //ms
 
+// Radio
+bool RFInit = false;
+rocket_states_t currRocketState = BOOTUP;
+sensorStatus statusByte;
+DOFSensor dofSensor;
+AltitudeSensor altitude_sensor;
+TemperatureSensor temperature_sensor;
+Sensor gps;
+RFManager rfManager;
+bool armCommandReceived = false;
+bool launchCommandReceived = false;
+bool verifyDataCommandReceived = false;
+bool reinitializeCommandReceived = false;
+
+bool keySwitched = false;
+bool pinCorrect = false;
+bool buttonPressed = false;
+bool sendLaunchCommand = false;
+
 
 uint8_t statbuf[3];  // buffer for receiving status messages
 int incomingByte;
@@ -103,25 +122,6 @@ void loop() {
   switch(state) {
     // INITIALIZE---------------------------------------
     case GroundStation::STATE::BOOTUP:
-    // Radio
-      static bool RFInit = false;
-      static rocket_states_t currRocketState = BOOTUP;
-      static sensorStatus statusByte;
-      static DOFSensor dofSensor;
-      static AltitudeSensor altitude_sensor;
-      static TemperatureSensor temperature_sensor;
-      static Sensor gps;
-      static RFManager rfManager;
-      static bool armCommandReceived = false;
-      static bool launchCommandReceived = false;
-      static bool verifyDataCommandReceived = false;
-      static bool reinitializeCommandReceived = false;
-
-      bool keySwitched = false;
-      bool pinCorrect = false;
-      bool buttonPressed = false;
-      bool sendLaunchCommand = false;
-
       state = GroundStation::STATE::CONN_WAIT;
       break;
 
