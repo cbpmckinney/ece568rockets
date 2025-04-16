@@ -358,14 +358,12 @@ sensor_status_t DOFSensor::collectData( int altitude )
   #ifdef DEBUGDOF
   if (printCount * BNO055_SAMPLERATE_DELAY_MS >= PRINT_DELAY_MS) {
     //enough iterations have passed that we can print the latest data
-    Serial.println("--------------AVERAGE-----------------");
-    Serial.print( this->average );
-    Serial.println("--------------------------------");
+    Serial.print("Average Velocity: ");
+    Serial.println( this->average );
 
-    Serial.println("---------------PEAK-----------------");
+    Serial.println("Peak Velocity: ");
     Serial.print( this->peak );
-    Serial.println("--------------------------------");
-    printPer1mData();
+    //printPer1mData();
     printCount = 0;
   }
   else {
