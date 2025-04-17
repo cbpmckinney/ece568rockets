@@ -72,7 +72,7 @@ void loop() {
         statusByte.bits.altitude_sensor    = altitude_sensor.initialize();
         statusByte.bits.temperature_sensor = temperature_sensor.initialize();
         statusByte.bits.gps                = gps.initialize(); 
-        //statusByte.bits.RFtransmitter      = rfManager.initialize();
+        statusByte.bits.RFtransmitter      = rfManager.initialize();
         if(statusByte.byte == 0)
         {
         #ifdef DEBUG
