@@ -9,9 +9,9 @@ William Li
 
 #include <Adafruit_SH110X.h>
 #include <RotaryEncoder.h>
-//#include "MainScreen.h"
-//#include "AuxiliaryScreen.h"
-//#include "OLEDScreenTests.h"
+#include "MainScreen.h"
+#include "AuxiliaryScreen.h"
+#include "OLEDScreenTests.h"
 #include "RFManager.h"
 
 
@@ -20,34 +20,44 @@ William Li
 #define PIN_VALUE_2 1
 #define PIN_VALUE_3 3
 
+// Peripheral Pins
 #define ROTARY_PIN_B 27
 #define ROTARY_PIN_A 28
-#define ROTARY_BTN 11
+#define ROTARY_BTN 24
+#define RED_BTN_LED_PIN 11
+#define RED_BTN_PRESS_PIN 10
+#define KEY_SW_PIN 12 // SW GREEN = CLOSED, SW RED = OPEN
+#define LED_RED 5
+#define LED_GREEN 6
+#define LED_BLUE 9
 
 // How much time needs to pass before registering another button press, in ms
 #define BUTTON_PRESS_LIMIT 500
 
-enum STATE
-{
-  INITIALIZE,
-  CONN_WAIT,
-  SAFE,
-  ARM,
-  PRIME,
-  FIRE,
-  COLLECT,
-  RECOVERY,
-  ERR
+namespace GroundStation {
+  enum STATE
+  {
+    BOOTUP,
+    CONN_WAIT,
+    SAFE,
+    ARM,
+    PRIME,
+    FIRE,
+    COLLECT,
+    RECOVERY,
+    ERR
+  };
 };
 
+
 // Ground station
-STATE state = ERR;
+GroundStation::STATE state = GroundStation::STATE::ERR;
 
 // Screens
-//MainScreen mainScreen = MainScreen();
-//AuxiliaryScreen auxScreen = AuxiliaryScreen();
-//LocalData groundStationData;
-//RocketData receivedRocketData;
+MainScreen mainScreen = MainScreen();
+AuxiliaryScreen auxScreen = AuxiliaryScreen();
+LocalData groundStationData;
+RocketData receivedRocketData;
 uint8_t* pin = NULL;
 
 unsigned long lastButtonPressTime = 0;
@@ -58,14 +68,45 @@ int pos = 0;
 int newPos = 0;
 int previousButtonState = 0;
 
+// Button debouncing
+int read_button_value = 0;
+int last_debounce_time = 0;
+int last_button_state = 0;
+int debounce_delay = 50; //ms
+
+// Radio
+bool RFInit = false;
+rocket_states_t currRocketState = BOOTUP;
+sensorStatus statusByte;
+DOFSensor dofSensor;
+AltitudeSensor altitude_sensor;
+TemperatureSensor temperature_sensor;
+Sensor gps;
+RFManager rfManager;
+bool armCommandReceived = false;
+bool launchCommandReceived = false;
+bool verifyDataCommandReceived = false;
+bool reinitializeCommandReceived = false;
+
+bool keySwitched = false;
+bool pinCorrect = false;
+bool buttonPressed = false;
+bool sendLaunchCommand = false;
+
+
+uint8_t statbuf[3];  // buffer for receiving status messages
+int incomingByte;
+
 void setup() {
-  state = INITIALIZE;
+  state = GroundStation::STATE::BOOTUP;
   Serial.begin(9600);
   delay(1000); // Wait for serial
 
   Serial.println("Serial started!");
 
-  //initializeScreens();
+  initializeLED();
+  initializePeripherals();
+  initializeScreens();
 
   encoder = new RotaryEncoder(ROTARY_PIN_B, ROTARY_PIN_A, RotaryEncoder::LatchMode::TWO03);
   attachInterrupt(digitalPinToInterrupt(ROTARY_PIN_A), checkEncoderPosition, CHANGE);
@@ -80,100 +121,208 @@ void loop() {
 
   switch(state) {
     // INITIALIZE---------------------------------------
-    case INITIALIZE:
-      state = CONN_WAIT;
+    case GroundStation::STATE::BOOTUP:
+      state = GroundStation::STATE::CONN_WAIT;
       break;
 
-    case CONN_WAIT:
+    case GroundStation::STATE::CONN_WAIT:
       // Verify connection to rocket
+      if (!RFInit)
+      {
+        statusByte.bits.RFtransmitter = rfManager.initialize();
+        RFInit = !RFInit;
+      }
+      rfManager.receiveStatus(statbuf);
 
-      rfManager.receiveStatus(&statbuf);
-
-      if (statbuf[2] == 1)
-        {
+      if (statbuf[2] == SAFE)
+      {
         Serial.println("Rocket in safe mode, message received!!");
-          state = SAFE;
-        }
+        updateLEDColor(0, 255, 0);
+        state = GroundStation::STATE::SAFE;
+        statbuf[2] = 0;
+      }
 
+      // If data screen enabled
+      updateDataDisplay();
 
+      // Process user input
+      processUserInput();
 
       break;
 
     // SAFE---------------------------------------
-    case SAFE:
+    case GroundStation::STATE::SAFE:
       // Check if ARM message received
       /*
       if (ARMMessageReceived)
       {
         1. Respond with ARM Message CONFIRMED.
-        2. Update main screen to have state rocket_armed = true
-        3. Update LED on ground station to signify rocket is armed
-        4. Update state to ARM
+        2. Update main screen to have state rocket_armed = true (mainScreen.rocket_armed = true;)
+        3. Update LED on ground station to signify rocket is armed (updateLEDColor(255,95,31);)
+        4. Update state to ARM (state = ARM;)
       }
       */
 
+      incomingByte = Serial.read();
+      if (incomingByte == 107)
+      {
+        incomingByte = Serial.read();
+        Serial.println("ARMING!");
+        rfManager.sendCommand(ARM_PACKET);
+      }
+      rfManager.receiveStatus(statbuf);
+      
+      if (statbuf[2] != 0)
+      {
+        Serial.println(statbuf[2]);
+      }
+
+      if (statbuf[2] == ARM)
+      {
+        Serial.println("Rocket in ARM mode, message received!!");
+        mainScreen.rocket_armed = true;
+        updateLEDColor(255,95,31);
+        state = GroundStation::STATE::ARM;
+      }
+
       // If data screen enabled
-      //updateDataDisplay();
+      updateDataDisplay();
 
       // Process user input
-      //processUserInput();
+      processUserInput();
 
       break;
 
     // ARM---------------------------------------
-    case ARM:
-      //if (keyInserted()) {
-      //  mainScreen.key_inserted = true;
-      //} 
-      //else
-      //{
-      //  mainScreen.key_inserted = false;
-      //}
+    case GroundStation::STATE::ARM:
+      if (keyInserted()) {
+        Serial.println("Key inserted");
+        mainScreen.key_inserted = true;
+      } 
+      else
+      {
+        mainScreen.key_inserted = false;
+      }
 
-      //if (mainScreen.ready_to_submit_pin) {
-        // User is about to submit pin, check if correct as
-        // changes cannot be made now
-      //  pin = mainScreen.getInputPin();
+      if (mainScreen.ready_to_submit_pin) {
+        //User is about to submit pin, check if correct as
+        //changes cannot be made now
+        pin = mainScreen.getInputPin();
 
-      //  if (validatePin(pin)) {
-      //    mainScreen.pin_correct = true;
-      //  }
-      //}
+       if (validatePin(pin)) {
+        mainScreen.pin_correct = true;
+       }
+      }
 
-      //if (mainScreen.prime_permissive) {
+      if (mainScreen.prime_permissive) {
         // User (screen) gave go-ahead on priming rocket.
         // Send message to rocket signifying ground station ready to PRIME
         //  *requires a response back
-        //  Update LED on ground station to signify rocket is primed
         // Make big red button glow
-      //  state = PRIME;
-      //}
+        state = GroundStation::STATE::PRIME;
+        updateLEDColor(255, 0, 0);
+      }
+
+      incomingByte = Serial.read();
+      if (incomingByte == 112)
+      {
+        incomingByte = Serial.read();
+        Serial.println("PIN verified, Ready to Launch!");
+        rfManager.sendCommand(RTL_PACKET);
+      }
+
+      rfManager.receiveStatus(statbuf);
+
+      if (statbuf[2] == READY_FOR_LAUNCH)
+      {
+        Serial.println("Rocket in RTL mode, message received!!");
+        state = GroundStation::STATE::PRIME;
+      }
+
+      // If data screen enabled
+      updateDataDisplay();
 
       // Process user input
-      //processUserInput();
+      processUserInput();
+
+      break;
       
     // PRIME---------------------------------------
-    case PRIME:
+    case GroundStation::STATE::PRIME:
       Serial.println("PRIME");
 
-      //processUserInput();
+      read_button_value = digitalRead(RED_BTN_PRESS_PIN);
+      
+      // Debounce button input
+      if (read_button_value != last_button_state) {
+        last_debounce_time = millis();
+      }
 
-    case FIRE:
+      if ((millis() - last_debounce_time) > debounce_delay) {
+        if (read_button_value == 1) {
+          // BUTTON PRESSED
+          Serial.println("Button pressed: Sending launch command!");
+          sendLaunchCommand = true;
+        }
+      }
+
+      if (sendLaunchCommand) {
+        rfManager.sendCommand(LAUNCH_PACKET);
+
+        rfManager.receiveStatus(statbuf);
+
+        if (statbuf[2] == LAUNCH)
+        {
+          Serial.println("Rocket in LAUNCH mode, message received!!");
+          updateLEDColor(255, 0, 0);
+          delay(100);
+          updateLEDColor(0, 0, 0);
+          delay(100);
+          updateLEDColor(255, 0, 0);
+          delay(100);
+          updateLEDColor(0, 0, 0);
+          delay(100);
+          updateLEDColor(255, 0, 0);
+          delay(100);
+          updateLEDColor(0, 0, 0);
+          delay(100);
+          state = GroundStation::STATE::FIRE;
+        }
+      }
+
+      incomingByte = Serial.read();
+      if (incomingByte == 98)
+      {
+        incomingByte = Serial.read();
+        Serial.println("Button pressed: launching!");
+        rfManager.sendCommand(LAUNCH_PACKET);
+      }
+
+      last_button_state = read_button_value;
+
+      processUserInput();
+
+      break;
+
+    case GroundStation::STATE::FIRE:
       Serial.println("FIRE");
       // processUserInput();?
+      break;
 
-    case COLLECT:
+    case GroundStation::STATE::COLLECT:
       Serial.println("COLLECT");
       // processUserInput( to show);?
       // Force data screen?
       // Receive radio information, make that top priority
       // Should Rocket send RECOVERY message to exit this state?
+      break;
 
-    case RECOVERY:
+    case GroundStation::STATE::RECOVERY:
       Serial.println("RECOVERY");
 
       // processUserInput();?
       // Update AUX screen with coordinates and arrow?
+      break;
       
 
   }
@@ -185,18 +334,37 @@ void checkEncoderPosition()
   encoder->tick(); // just call tick() to check the state.
 }
 
-void initializeScreens() {
-  Serial.println("Initializing screens!");
+void updateLEDColor(int red, int green, int blue) {
+  analogWrite(LED_RED, red);
+  analogWrite(LED_GREEN, green);
+  analogWrite(LED_BLUE, blue);
+}
 
+void initializeLED() {
+  pinMode(LED_RED, OUTPUT);
+  pinMode(LED_GREEN, OUTPUT);
+  pinMode(LED_BLUE, OUTPUT);
+  updateLEDColor(255, 150, 0);
+  Serial.println("LED Initialized");
+}
+
+void initializePeripherals() {
+  pinMode(KEY_SW_PIN, INPUT);
+  Serial.println("Peripheral Inputs Initialized");
+}
+
+void initializeScreens() {
   mainScreen.initialize(0x3D);
   auxScreen.initialize(0x3C);
 
   mainScreen.showMenu();
 
+  Serial.println("Screens initialized!");
+
   //testFullLaunch(mainScreen);
   //testDataScreen(mainScreen, auxScreen);
 
-  delay(2000);
+  delay(500);
 }
 
 void updateDataDisplay() {
@@ -205,7 +373,7 @@ void updateDataDisplay() {
   } 
   else if (mainScreen.request_show_data == false) 
   {
-    if (auxScreen.currentScreen != NONE) {
+    if (auxScreen.currentScreen != ScreenEnums::Screen::NONE) {
       auxScreen.disableShowingData();
     }
   } 
@@ -286,6 +454,11 @@ bool validatePin(uint8_t* pin) {
 }
 
 bool keyInserted() {
-  // TODO
-  return false;
+  // CURRENTLY NOT DEBOUNCED, SHOULD BE?
+  if (digitalRead(KEY_SW_PIN)) {
+    return true;
+  } else {
+    return false;
+  }
+  
 }

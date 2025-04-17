@@ -65,6 +65,7 @@ void RFManager::tx(char *str_num, int size) {
   }
 
   rf95.send((uint8_t *)str_num, size); // might have to adjust packet size
+  delay(1);
 }
 
 // for both rocket and ground station,
@@ -89,17 +90,24 @@ void RFManager::receiveStatus(uint8_t * outbuf)
 
   if (rf95.available())
   {
+    Serial.println("RF95 Available");
     uint8_t buf[20]; // for now im using size 20
     uint8_t len = sizeof(buf);
     if( rf95.recv(buf, &len) )
     {
-    packet_type_t STATUS;
-    uint8_t data;
-    sensorStatus SensStatus;
+    //packet_type_t STATUS;
+    //uint8_t data;
+    //sensorStatus SensStatus;
 
-    outbuf[0] = STATUS;
-    outbuf[1] = data;
-    outbuf[2] = SensStatus.byte;
+
+    outbuf[0] = buf[0];
+    outbuf[1] = buf[1];
+    outbuf[2] = buf[2];
+
+    //Serial.println("Attempting to print data");
+    //Serial.println(outbuf[0]);
+    //Serial.println(outbuf[1]);
+    //Serial.println(outbuf[2]);
 
     }
   }
@@ -142,20 +150,18 @@ char* RFManager::rx() {
 
 void RFManager::sendCommand(packet_type_t commandToSend)
 {
-  if(rf95.available())
-  {
-    uint8_t buf[1];
-    uint8_t len = sizeof(buf);
-    
-    // FIX THIS
-    tx((char *) buf, len);
 
+  uint8_t buf[1];
+  uint8_t len = sizeof(buf);
 
-  }
-
+  buf[0] = commandToSend;
+  buf[1] = 0;
+  Serial.print("Sending: ");
+  Serial.println(commandToSend);
+  //rf95.send((uint8_t *) buf, len);
+  this->tx((char *) buf, len);
 
 }
-
 
 bool RFManager::receivedCommand( packet_type_t commandToReceive )
 {

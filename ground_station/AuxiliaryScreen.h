@@ -51,7 +51,7 @@ class AuxiliaryScreen {
     
     // Members
     bool data_screen_enabled = false;
-    Screen currentScreen = NONE;
+    ScreenEnums::Screen currentScreen = ScreenEnums::Screen::NONE;
     LocalData storedLocalData;
     RocketData storedRocketData;
 
@@ -59,12 +59,12 @@ class AuxiliaryScreen {
     Adafruit_SH1107 display = Adafruit_SH1107(SCREEN_WIDTH, SCREEN_HEIGHT, &Wire, OLED_RESET, 1000000, 100000);
     void initialize(uint8_t i2caddr);
     void clearDisplay();
-    void jumpToScreen(Screen screen);
+    void jumpToScreen(ScreenEnums::Screen screen);
     void showRocketData();
     void showLocalData();
     void enableShowingData();
     void disableShowingData();
-    void requestScreen(Screen targetScreen);
+    void requestScreen(ScreenEnums::Screen targetScreen);
     void refreshDataPoint(int old_data, int new_data, uint8_t index_x, uint8_t index_y, const char* message);
     void updateLocalData(LocalData data);
     void updateRocketData(RocketData data);

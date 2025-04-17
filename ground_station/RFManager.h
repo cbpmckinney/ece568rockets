@@ -10,6 +10,7 @@ typedef enum
     STATUS,
     FAIL,
     ARM_PACKET,
+    RTL_PACKET,
     M_DATA_PACKET, //1 m data
     LAUNCH_PACKET,
     PEAK_DATA_PACKET,

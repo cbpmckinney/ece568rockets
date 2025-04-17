@@ -27,7 +27,7 @@ void AuxiliaryScreen::clearDisplay() {
 }
 
 void AuxiliaryScreen::showLocalData() {
-    currentScreen = LOCAL;
+    currentScreen = ScreenEnums::Screen::LOCAL;
 
     clearDisplay();
     display.setTextSize(1);
@@ -48,7 +48,7 @@ void AuxiliaryScreen::showLocalData() {
 }
 
 void AuxiliaryScreen::showRocketData() {
-    currentScreen = ROCKET;
+    currentScreen = ScreenEnums::Screen::ROCKET;
 
     clearDisplay();
     display.setTextSize(1);
@@ -68,17 +68,17 @@ void AuxiliaryScreen::showRocketData() {
     display.display();
 }
 
-void AuxiliaryScreen::jumpToScreen(Screen screen) {
+void AuxiliaryScreen::jumpToScreen(ScreenEnums::Screen screen) {
     Serial.print("In jump to screen, going to: "); Serial.println(screen);
     switch (screen) {
-        case LOCAL:
+        case ScreenEnums::Screen::LOCAL:
             showLocalData();
             break;
-        case ROCKET:
+        case ScreenEnums::Screen::ROCKET:
             showRocketData();
             break;
-        case NONE:
-            currentScreen = NONE;
+        case ScreenEnums::Screen::NONE:
+            currentScreen = ScreenEnums::Screen::NONE;
             clearDisplay();
             break;
         default:
@@ -93,11 +93,11 @@ void AuxiliaryScreen::enableShowingData() {
 
 void AuxiliaryScreen::disableShowingData() {
     data_screen_enabled = false;
-    jumpToScreen(NONE);
+    jumpToScreen(ScreenEnums::Screen::NONE);
 }
 
-void AuxiliaryScreen::requestScreen(Screen targetScreen) {
-    if (targetScreen == LOCAL or targetScreen == ROCKET) {
+void AuxiliaryScreen::requestScreen(ScreenEnums::Screen targetScreen) {
+    if (targetScreen == ScreenEnums::Screen::LOCAL or targetScreen == ScreenEnums::Screen::ROCKET) {
         jumpToScreen(targetScreen);
     }
 }
@@ -113,7 +113,6 @@ void AuxiliaryScreen::refreshDataPoint(int old_data, int new_data, uint8_t index
 
 void AuxiliaryScreen::updateLocalData(LocalData input_data) {
     if (data_screen_enabled) {
-        Serial.println("Showing local data");
         // Find what data has actually updated since last update
         if (storedLocalData.temp !=  input_data.temp) {
             refreshDataPoint(storedLocalData.temp, input_data.temp, 0, 8, "Temp (F): ");
@@ -145,7 +144,6 @@ void AuxiliaryScreen::updateLocalData(LocalData input_data) {
 
 void AuxiliaryScreen::updateRocketData(RocketData input_data) {
     if (data_screen_enabled) {
-        Serial.println("Showing local data");
         // Find what data has actually updated since last update
         if (storedLocalData.temp !=  input_data.temp) {
             refreshDataPoint(storedLocalData.temp, input_data.temp, 0, 8, "Temp (F): ");

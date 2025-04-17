@@ -58,7 +58,7 @@ struct ScreenCursorIndex {
 // Stores navigation information for moving the cursor and jumping
 // to another screen
 struct ScreenNavInfo {
-    Screen nextScreen;
+    ScreenEnums::Screen nextScreen;
     uint8_t cursor_x_index;
     uint8_t cursor_y_index;
     uint8_t pin_x_index = 0;
@@ -74,7 +74,7 @@ class MainScreen {
         // CLASS DATA MEMBERS
         Adafruit_SH1107 display = Adafruit_SH1107(SCREEN_WIDTH, SCREEN_HEIGHT, &Wire, OLED_RESET, 1000000, 100000);
         ScreenCursorIndex screenCursorIndexes;
-        Screen currentScreen = MENU;
+        ScreenEnums::Screen currentScreen = ScreenEnums::Screen::MENU;
         bool data_screen_enabled = false;
         bool rocket_armed = false;
         bool key_inserted = false;
@@ -82,7 +82,7 @@ class MainScreen {
         bool pin_correct = false;
         bool request_show_data = false;
         bool prime_permissive = false;
-        Screen data_screen_requested = NONE;
+        ScreenEnums::Screen data_screen_requested = ScreenEnums::Screen::NONE;
         ScreenNavInfo menuOptions[4];
         ScreenNavInfo dataOptions[3];
         ScreenNavInfo launchOptions[2];
@@ -102,7 +102,7 @@ class MainScreen {
         void showLaunchSeq();
         void showLaunchBigRed();
         void showLaunchWrongPin();
-        void jumpToScreen(Screen screen);
+        void jumpToScreen(ScreenEnums::Screen screen);
         void receiveScreenInput(UserInput input);
         void updateScreenCursor(uint8_t x_index, uint8_t y_index, uint8_t prev_x_index=255, uint8_t prev_y_index=255);
         void updatePinNumber(uint8_t x_index, uint8_t y_index, uint8_t value, uint8_t prev_value=255);
