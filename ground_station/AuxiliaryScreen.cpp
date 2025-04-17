@@ -113,7 +113,6 @@ void AuxiliaryScreen::refreshDataPoint(int old_data, int new_data, uint8_t index
 
 void AuxiliaryScreen::updateLocalData(LocalData input_data) {
     if (data_screen_enabled) {
-        Serial.println("Showing local data");
         // Find what data has actually updated since last update
         if (storedLocalData.temp !=  input_data.temp) {
             refreshDataPoint(storedLocalData.temp, input_data.temp, 0, 8, "Temp (F): ");
@@ -145,7 +144,6 @@ void AuxiliaryScreen::updateLocalData(LocalData input_data) {
 
 void AuxiliaryScreen::updateRocketData(RocketData input_data) {
     if (data_screen_enabled) {
-        Serial.println("Showing local data");
         // Find what data has actually updated since last update
         if (storedLocalData.temp !=  input_data.temp) {
             refreshDataPoint(storedLocalData.temp, input_data.temp, 0, 8, "Temp (F): ");

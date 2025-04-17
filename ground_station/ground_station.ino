@@ -142,6 +142,12 @@ void loop() {
         statbuf[2] = 0;
       }
 
+      // If data screen enabled
+      updateDataDisplay();
+
+      // Process user input
+      processUserInput();
+
       break;
 
     // SAFE---------------------------------------
@@ -338,25 +344,27 @@ void initializeLED() {
   pinMode(LED_RED, OUTPUT);
   pinMode(LED_GREEN, OUTPUT);
   pinMode(LED_BLUE, OUTPUT);
-  updateLEDColor(255, 255, 0);
+  updateLEDColor(255, 150, 0);
+  Serial.println("LED Initialized");
 }
 
 void initializePeripherals() {
   pinMode(KEY_SW_PIN, INPUT);
+  Serial.println("Peripheral Inputs Initialized");
 }
 
 void initializeScreens() {
-  Serial.println("Initializing screens!");
-
   mainScreen.initialize(0x3D);
   auxScreen.initialize(0x3C);
 
   mainScreen.showMenu();
 
+  Serial.println("Screens initialized!");
+
   //testFullLaunch(mainScreen);
   //testDataScreen(mainScreen, auxScreen);
 
-  delay(2000);
+  delay(500);
 }
 
 void updateDataDisplay() {
