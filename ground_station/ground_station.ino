@@ -32,7 +32,7 @@ William Li
 #define LED_BLUE 9
 
 // How much time needs to pass before registering another button press, in ms
-#define BUTTON_PRESS_LIMIT 500
+#define BUTTON_PRESS_LIMIT 250
 
 namespace GroundStation {
   enum STATE
@@ -56,7 +56,7 @@ GroundStation::STATE state = GroundStation::STATE::ERR;
 // Screens
 MainScreen mainScreen = MainScreen();
 AuxiliaryScreen auxScreen = AuxiliaryScreen();
-LocalData groundStationData;
+LocalSensorData groundStationData;
 RocketData receivedRocketData;
 uint8_t* pin = NULL;
 
@@ -146,7 +146,7 @@ void loop() {
         statbuf[2] = 0;
       }
       
-      localDataSensors.collectData();
+      groundStationData = localDataSensors.collectData();
 
       // If data screen enabled
       updateDataDisplay();
@@ -257,6 +257,7 @@ void loop() {
     case GroundStation::STATE::PRIME:
       Serial.println("PRIME");
 
+      digitalWrite(RED_BTN_LED_PIN, 1);
       read_button_value = digitalRead(RED_BTN_PRESS_PIN);
       
       // Debounce button input
@@ -268,7 +269,7 @@ void loop() {
         if (read_button_value == 1) {
           // BUTTON PRESSED
           Serial.println("Button pressed: Sending launch command!");
-          sendLaunchCommand = true;
+          //sendLaunchCommand = true;
         }
       }
 
@@ -355,6 +356,7 @@ void initializeLED() {
 }
 
 void initializePeripherals() {
+  pinMode(RED_BTN_LED_PIN, OUTPUT);
   pinMode(KEY_SW_PIN, INPUT);
   Serial.println("Peripheral Inputs Initialized");
 }

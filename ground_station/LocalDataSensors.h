@@ -10,11 +10,14 @@
 #define SEALEVELPRESSURE_HPA (1013.25)
 
 struct LocalSensorData {
+    // AHT20
     float aht_temp;
     float aht_humidity;
+    //BMP390
     double bmp_temperature;
     double bmp_pressure;
     float bmp_altitude;
+    //GPS
     uint8_t gps_hour;
     uint8_t gps_minute;
     uint8_t gps_seconds;
@@ -32,6 +35,8 @@ struct LocalSensorData {
     nmea_float_t gps_angle;
     nmea_float_t gps_altitude;
     uint8_t gps_satellites;
+    // Combined
+    double average_temp;
 };
 
 class LocalDataSensors {

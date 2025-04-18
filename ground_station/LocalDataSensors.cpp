@@ -80,19 +80,19 @@ LocalSensorData LocalDataSensors::collectData() {
             Serial.println(GPS.milliseconds);
             Serial.print("Date: ");
             Serial.print(GPS.day, DEC); Serial.print('/');
-            Serial.print(GPS.month, DEC); Serial.print("/20");
-            Serial.println(GPS.year, DEC);
+            Serial.print(data.gps_month); Serial.print("/20");
+            Serial.println(data.gps_year, DEC);
             Serial.print("Fix: "); Serial.print((int)GPS.fix);
             Serial.print(" quality: "); Serial.println((int)GPS.fixquality);
             if (GPS.fix) {
                 Serial.print("Location: ");
-                Serial.print(GPS.latitude, 4); Serial.print(GPS.lat);
+                Serial.print(data.gps_latitude, 4); Serial.print(data.gps_lat);
                 Serial.print(", ");
-                Serial.print(GPS.longitude, 4); Serial.println(GPS.lon);
-                Serial.print("Speed (knots): "); Serial.println(GPS.speed);
-                Serial.print("Angle: "); Serial.println(GPS.angle);
-                Serial.print("Altitude: "); Serial.println(GPS.altitude);
-                Serial.print("Satellites: "); Serial.println((int)GPS.satellites);
+                Serial.print(data.gps_longitude, 4); Serial.println(data.gps_lon);
+                Serial.print("Speed (knots): "); Serial.println(data.gps_speed);
+                Serial.print("Angle: "); Serial.println(data.gps_angle);
+                Serial.print("Altitude: "); Serial.println(data.gps_altitude);
+                Serial.print("Satellites: "); Serial.println(data.gps_satellites);
             }
         }
         
@@ -100,7 +100,7 @@ LocalSensorData LocalDataSensors::collectData() {
         if (! bmp.performReading()) {
             Serial.println("Failed to perform BMP reading");
         } else {
-            data.bmp_temperature = bmp.temperature;
+            data.bmp_temperature = ((bmp.temperature*1.8)+32);
             data.bmp_pressure = bmp.pressure/100.0;
             data.bmp_altitude = bmp.readAltitude(SEALEVELPRESSURE_HPA);
 
@@ -122,7 +122,7 @@ LocalSensorData LocalDataSensors::collectData() {
         Serial.print("Temperature: "); Serial.print(temp.temperature); Serial.println(" degrees C");
         Serial.print("Humidity: "); Serial.print(humidity.relative_humidity); Serial.println("% rH");
         
-        data.aht_temp = temp.temperature;
+        data.aht_temp = ((temp.temperature*1.8)+32);
         data.aht_humidity = humidity.relative_humidity;
     }
 
