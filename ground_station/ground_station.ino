@@ -13,7 +13,7 @@ William Li
 #include "AuxiliaryScreen.h"
 #include "OLEDScreenTests.h"
 #include "RFManager.h"
-
+#include "LocalDataSensors.h"
 
 // Launch Code
 #define PIN_VALUE_1 2
@@ -62,6 +62,9 @@ uint8_t* pin = NULL;
 
 unsigned long lastButtonPressTime = 0;
 
+// Sensors
+LocalDataSensors localDataSensors = LocalDataSensors();
+
 // Encoder
 RotaryEncoder *encoder = nullptr;
 int pos = 0;
@@ -99,7 +102,7 @@ int incomingByte;
 
 void setup() {
   state = GroundStation::STATE::BOOTUP;
-  Serial.begin(9600);
+  Serial.begin(115200);
   delay(1000); // Wait for serial
 
   Serial.println("Serial started!");
@@ -107,6 +110,7 @@ void setup() {
   initializeLED();
   initializePeripherals();
   initializeScreens();
+  localDataSensors.initializeSensors();
 
   encoder = new RotaryEncoder(ROTARY_PIN_B, ROTARY_PIN_A, RotaryEncoder::LatchMode::TWO03);
   attachInterrupt(digitalPinToInterrupt(ROTARY_PIN_A), checkEncoderPosition, CHANGE);
@@ -141,6 +145,8 @@ void loop() {
         state = GroundStation::STATE::SAFE;
         statbuf[2] = 0;
       }
+      
+      localDataSensors.collectData();
 
       // If data screen enabled
       updateDataDisplay();
