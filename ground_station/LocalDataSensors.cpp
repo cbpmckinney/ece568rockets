@@ -1,5 +1,4 @@
 #include "LocalDataSensors.h"
-#include <Adafruit_GPS.h>
 
 Adafruit_GPS GPS(&Wire);
 
@@ -54,6 +53,25 @@ LocalSensorData LocalDataSensors::collectData() {
             Serial.print(GPS.minute, DEC); Serial.print(':');
             if (GPS.seconds < 10) { Serial.print('0'); }
             Serial.print(GPS.seconds, DEC); Serial.print('.');
+
+            data.gps_hour = GPS.hour;
+            data.gps_minute = GPS.minute;
+            data.gps_seconds = GPS.seconds;
+            data.gps_milliseconds = GPS.milliseconds;
+            data.gps_day = GPS.day;
+            data.gps_month = GPS.month;
+            data.gps_year = GPS.year;
+            data.gps_fix = GPS.fix;
+            data.gps_fixquality = GPS.fixquality;
+            data.gps_latitude = GPS.latitude;
+            data.gps_lat = GPS.lat;
+            data.gps_longitude = GPS.longitude;
+            data.gps_lon = GPS.lon;
+            data.gps_speed = GPS.speed;
+            data.gps_angle = GPS.angle;
+            data.gps_altitude = GPS.altitude;
+            data.gps_satellites = GPS.satellites;
+
             if (GPS.milliseconds < 10) {
                 Serial.print("00");
             } else if (GPS.milliseconds > 9 && GPS.milliseconds < 100) {
@@ -82,6 +100,10 @@ LocalSensorData LocalDataSensors::collectData() {
         if (! bmp.performReading()) {
             Serial.println("Failed to perform BMP reading");
         } else {
+            data.bmp_temperature = bmp.temperature;
+            data.bmp_pressure = bmp.pressure/100.0;
+            data.bmp_altitude = bmp.readAltitude(SEALEVELPRESSURE_HPA);
+
             Serial.print("BMP Temperature = ");
             Serial.print(bmp.temperature);
             Serial.println(" *C");
@@ -99,6 +121,9 @@ LocalSensorData LocalDataSensors::collectData() {
         aht.getEvent(&humidity, &temp);// populate temp and humidity objects with fresh data
         Serial.print("Temperature: "); Serial.print(temp.temperature); Serial.println(" degrees C");
         Serial.print("Humidity: "); Serial.print(humidity.relative_humidity); Serial.println("% rH");
+        
+        data.aht_temp = temp.temperature;
+        data.aht_humidity = humidity.relative_humidity;
     }
 
     return data;

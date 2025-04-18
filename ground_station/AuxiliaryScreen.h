@@ -15,6 +15,7 @@ Chris Silman
 #define MAX_MENU_OPTIONS 3 // 0 included
 
 #include "Screen.h"
+#include "LocalDataSensors.h"
 
 // Expected structure of local data
 struct LocalData {
@@ -52,7 +53,7 @@ class AuxiliaryScreen {
     // Members
     bool data_screen_enabled = false;
     ScreenEnums::Screen currentScreen = ScreenEnums::Screen::NONE;
-    LocalData storedLocalData;
+    LocalSensorData storedLocalData;
     RocketData storedRocketData;
 
     // Methods
@@ -66,7 +67,7 @@ class AuxiliaryScreen {
     void disableShowingData();
     void requestScreen(ScreenEnums::Screen targetScreen);
     void refreshDataPoint(int old_data, int new_data, uint8_t index_x, uint8_t index_y, const char* message);
-    void updateLocalData(LocalData data);
+    void updateLocalData(LocalSensorData data);
     void updateRocketData(RocketData data);
 };
 

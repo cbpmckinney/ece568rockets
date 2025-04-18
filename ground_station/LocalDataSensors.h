@@ -3,6 +3,7 @@
 
 #include <Adafruit_BMP3XX.h>
 #include <Adafruit_AHTX0.h>
+#include <Adafruit_GPS.h>
 #include <Arduino.h>
 #include <memory>
 
@@ -14,6 +15,23 @@ struct LocalSensorData {
     double bmp_temperature;
     double bmp_pressure;
     float bmp_altitude;
+    uint8_t gps_hour;
+    uint8_t gps_minute;
+    uint8_t gps_seconds;
+    uint8_t gps_milliseconds;
+    uint8_t gps_day;
+    uint8_t gps_month;
+    uint8_t gps_year;
+    int gps_fix;
+    int gps_fixquality;
+    nmea_float_t gps_latitude;
+    char gps_lat;
+    nmea_float_t gps_longitude;
+    char gps_lon;
+    nmea_float_t gps_speed;
+    nmea_float_t gps_angle;
+    nmea_float_t gps_altitude;
+    uint8_t gps_satellites;
 };
 
 class LocalDataSensors {
