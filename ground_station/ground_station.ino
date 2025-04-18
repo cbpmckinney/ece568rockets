@@ -394,8 +394,6 @@ void updateDataDisplay() {
     auxScreen.updateLocalData(groundStationData);
     auxScreen.updateRocketData(receivedRocketData);
     if (auxScreen.currentScreen != mainScreen.data_screen_requested) {
-      Serial.print("Aux: ");Serial.println(auxScreen.currentScreen);
-      Serial.print("Main: ");Serial.println(mainScreen.data_screen_requested);
       auxScreen.requestScreen(mainScreen.data_screen_requested);
     }
   }

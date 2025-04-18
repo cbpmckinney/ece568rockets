@@ -70,6 +70,11 @@ void AuxiliaryScreen::showLocalData() {
         if (storedLocalData.gps_seconds < 10) { display.print('0'); }
         display.print(storedLocalData.gps_seconds);
 
+    // GPS Satellites
+
+    // GPS Lat and Long
+    
+
     display.display();
 }
 
@@ -128,19 +133,33 @@ void AuxiliaryScreen::requestScreen(ScreenEnums::Screen targetScreen) {
     }
 }
 
-void AuxiliaryScreen::refreshDataPoint(float old_data, float new_data, uint8_t index_x, uint8_t index_y, const char* message) {
-    display.setTextColor(SH110X_BLACK);
-    display.setCursor(index_x,index_y);
-    display.print(F(message)); display.println(old_data);
-    display.setTextColor(SH110X_WHITE);
-    display.setCursor(index_x,index_y);
-    display.print(F(message)); display.println(new_data);
+void AuxiliaryScreen::refreshDataPoint(float old_data, float new_data, uint8_t index_x, uint8_t index_y, const char* prefix, const char* suffix, bool forceInt) {
+    if (forceInt) {
+        int old_int_data = (int)old_data;
+        int new_int_data = (int)new_data;
+
+        display.setTextColor(SH110X_BLACK);
+        display.setCursor(index_x,index_y);
+        display.print(F(prefix)); display.print(old_int_data); display.println(suffix);
+        display.setTextColor(SH110X_WHITE);
+        display.setCursor(index_x,index_y);
+        display.print(F(prefix)); display.print(new_int_data); display.println(suffix);
+    } else {
+        display.setTextColor(SH110X_BLACK);
+        display.setCursor(index_x,index_y);
+        display.print(F(prefix)); display.print(old_data); display.println(suffix);
+        display.setTextColor(SH110X_WHITE);
+        display.setCursor(index_x,index_y);
+        display.print(F(prefix)); display.print(new_data); display.println(suffix);
+    }
+    
+     
 }
 
-void AuxiliaryScreen::refreshDataPoint(int old_data1, int old_data2, int old_data3, int new_data1, int new_data2, int new_data3, uint8_t index_x, uint8_t index_y, const char* separator, const char* message) {
+void AuxiliaryScreen::refreshDataPoint(int old_data1, int old_data2, int old_data3, int new_data1, int new_data2, int new_data3, uint8_t index_x, uint8_t index_y, const char* separator, const char* prefix) {
     display.setTextColor(SH110X_BLACK);
     display.setCursor(index_x,index_y);
-    display.print(F(message));
+    display.print(F(prefix));
     if (old_data1 < 10) { display.print('0'); }
     display.print(old_data1); display.print(separator);
     if (old_data2 < 10) { display.print('0'); }
@@ -150,7 +169,7 @@ void AuxiliaryScreen::refreshDataPoint(int old_data1, int old_data2, int old_dat
 
     display.setTextColor(SH110X_WHITE);
     display.setCursor(index_x,index_y);
-    display.print(F(message));
+    display.print(F(prefix));
     if (new_data1 < 10) { display.print('0'); }
     display.print(new_data1); display.print(separator);
     if (new_data2 < 10) { display.print('0'); }
@@ -160,7 +179,7 @@ void AuxiliaryScreen::refreshDataPoint(int old_data1, int old_data2, int old_dat
 }
 
 void AuxiliaryScreen::updateLocalData(LocalSensorData input_data) {
-    if (data_screen_enabled && current == ScreenEnums::Screen::LOCAL) {
+    if (data_screen_enabled && currentScreen == ScreenEnums::Screen::LOCAL) {
         
         // Update data display every 500 seconds, data reads every 2 seconds.
         if (millis() - data_update_timer > 500) {
@@ -236,6 +255,23 @@ void AuxiliaryScreen::updateLocalData(LocalSensorData input_data) {
                 storedLocalData.gps_seconds = input_data.gps_seconds;
             }
 
+            // GPS Satellites
+            if (storedLocalData.gps_satellites != input_data.gps_satellites) {
+                refreshDataPoint(storedLocalData.gps_satellites, input_data.gps_satellites, 75, y_scale*0, "[SAT. ", "]", true);
+                storedLocalData.gps_satellites = input_data.gps_satellites;
+            }
+
+            // GPS Lat and Long
+            if (storedLocalData.gps_latitude != input_data.gps_latitude) {
+                refreshDataPoint(storedLocalData.gps_latitude, input_data.gps_latitude, 0, y_scale*8, "Lat.: ", &input_data.gps_lat);
+                storedLocalData.gps_latitude = input_data.gps_latitude;
+            }
+
+            if (storedLocalData.gps_longitude != input_data.gps_longitude) {
+                refreshDataPoint(storedLocalData.gps_longitude, input_data.gps_longitude, 0, y_scale*9, "Lon.: ", &input_data.gps_lon);
+                storedLocalData.gps_longitude = input_data.gps_longitude;
+            }
+
         }
     }
 
@@ -243,7 +279,7 @@ void AuxiliaryScreen::updateLocalData(LocalSensorData input_data) {
 }
 
 void AuxiliaryScreen::updateRocketData(RocketData input_data) {
-    if (data_screen_enabled && current == ScreenEnums::Screen::ROCKET) {
+    if (data_screen_enabled && currentScreen == ScreenEnums::Screen::ROCKET) {
         // Find what data has actually updated since last update
         /*if (storedLocalData.temp !=  input_data.temp) {
             refreshDataPoint(storedLocalData.temp, input_data.temp, 0, 8, "Temp (F): ");
