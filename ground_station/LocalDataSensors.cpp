@@ -43,7 +43,7 @@ LocalSensorData LocalDataSensors::collectData() {
             skipGPS = true; // we can fail to parse a sentence in which case we should just wait for another
       }
 
-    if (millis() - data_read_timer > 2000) {
+    if (millis() - data_read_timer > 1000) {
         data_read_timer = millis(); // reset the timer
         if (!skipGPS) {
             Serial.print("\nTime: ");

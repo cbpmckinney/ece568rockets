@@ -160,7 +160,7 @@ void AuxiliaryScreen::refreshDataPoint(int old_data1, int old_data2, int old_dat
 }
 
 void AuxiliaryScreen::updateLocalData(LocalSensorData input_data) {
-    if (data_screen_enabled) {
+    if (data_screen_enabled && current == ScreenEnums::Screen::LOCAL) {
         
         // Update data display every 500 seconds, data reads every 2 seconds.
         if (millis() - data_update_timer > 500) {
@@ -243,7 +243,7 @@ void AuxiliaryScreen::updateLocalData(LocalSensorData input_data) {
 }
 
 void AuxiliaryScreen::updateRocketData(RocketData input_data) {
-    if (data_screen_enabled) {
+    if (data_screen_enabled && current == ScreenEnums::Screen::ROCKET) {
         // Find what data has actually updated since last update
         /*if (storedLocalData.temp !=  input_data.temp) {
             refreshDataPoint(storedLocalData.temp, input_data.temp, 0, 8, "Temp (F): ");
