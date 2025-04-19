@@ -218,25 +218,25 @@ void loop() {
         
           statusByte.bits.RFtransmitter          = rfManager.transmitData( dofSensor, altitude_sensor, temperature_sensor, gps );
         //   COMMENT THIS NEXT SECTION OUT IF YOU ARE RUNNING ON YOUR COMPUTER ON THE GROUND OR IT WILL INSTANTLY TRANSITION
-          #ifdef TEST_MODE_ON_GROUND
-          if( doneFlying )
-          {
-            #ifdef DEBUG
-             firstEntry = true;
-          #endif
-             currRocketState = RECOVERY;
-             rfManager.sendStatus( statusByte, currRocketState );
-          }
-          #else
-          if( dofSensor.doneFlying )
-          {
-          #ifdef DEBUG
-             firstEntry = true;
-          #endif
-             currRocketState = RECOVERY;
-             rfManager.sendStatus( statusByte, currRocketState );
-          }
-          #endif
+          // #ifdef TEST_MODE_ON_GROUND
+          // if( doneFlying )
+          // {
+          //   #ifdef DEBUG
+          //    firstEntry = true;
+          // #endif
+          //    currRocketState = RECOVERY;
+          //    rfManager.sendStatus( statusByte, currRocketState );
+          // }
+          // #else
+          // if( dofSensor.doneFlying )
+          // {
+          // #ifdef DEBUG
+          //    firstEntry = true;
+          // #endif
+          //    currRocketState = RECOVERY;
+          //    rfManager.sendStatus( statusByte, currRocketState );
+          // }
+          // #endif
           break;
         
       case RECOVERY:

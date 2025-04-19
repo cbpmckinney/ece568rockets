@@ -114,6 +114,123 @@ void RFManager::receiveStatus(uint8_t * outbuf)
 }
 
 
+void RFManager::receiveData(DataStorage &D_VelocityData, DataStorage &T_TempData, DataStorage &T_HumidityData, DataStorage &A_PressureData, DataStorage &A_TempData, float * A_Altitude)
+
+{
+
+  if (rf95.available())
+  {
+    uint8_t buf[10];
+    uint8_t len = sizeof(buf);
+
+    if (rf95.recv(buf, &len))
+    {
+      float val;
+      switch (buf[0])
+      {
+        case M_DATA_PACKET:
+
+          //D_VelocityData;
+          //T_TempData;
+          //T_HumidityData;
+          //A_PressureData;
+          //A_TempData;
+
+          memcpy(&val, &buf[3], sizeof(float));
+
+          switch (buf[1])
+          {
+            case VELOCITY:
+              D_VelocityData.per1mDataArray[buf[2]] = val;
+              break;
+
+            case ALTITUDE_TEMPERATURE:
+              A_TempData.per1mDataArray[buf[2]] = val;
+              break;
+
+            case ALTITUDE_PRESSURE:
+              A_PressureData.per1mDataArray[buf[2]] = val;
+              break;
+
+            case TEMPERATURE_TEMPERATURE:
+              T_TempData.per1mDataArray[buf[2]] = val;
+              break;
+
+            case TEMPERATURE_HUMIDITY:
+              T_HumidityData.per1mDataArray[buf[2]] = val;
+              break;
+          }
+          break;
+
+
+        case PEAK_DATA_PACKET:
+          memcpy(&val, &buf[2], sizeof(float));
+
+          switch (buf[1])
+          {
+            case VELOCITY:
+              D_VelocityData.peak = val;
+              break;
+
+            case ALTITUDE_TEMPERATURE:
+              A_TempData.peak = val;
+              break;
+
+            case ALTITUDE_PRESSURE:
+              A_PressureData.peak = val;
+              break;
+
+            case TEMPERATURE_TEMPERATURE:
+              T_TempData.peak = val;
+              break;
+
+            case TEMPERATURE_HUMIDITY:
+              T_HumidityData.peak = val;
+              break;
+          }
+          break;
+
+
+        case AVERAGE_DATA_PACKET:
+          memcpy(&val, &buf[2], sizeof(float));
+
+          switch (buf[1])
+          {
+            case VELOCITY:
+              D_VelocityData.average = val;
+              break;
+
+            case ALTITUDE_TEMPERATURE:
+              A_TempData.average = val;
+              break;
+
+            case ALTITUDE_PRESSURE:
+              A_PressureData.average = val;
+              break;
+
+            case TEMPERATURE_TEMPERATURE:
+              T_TempData.average = val;
+              break;
+
+            case TEMPERATURE_HUMIDITY:
+              T_HumidityData.average = val;
+              break;
+          }
+          break;
+
+
+        case ALTITUDE_PACKET:
+          *A_Altitude = val;
+          break;
+
+      }
+    }
+  }
+}
+
+
+
+
 
 
 

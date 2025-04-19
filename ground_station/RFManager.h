@@ -42,6 +42,9 @@ class RFManager
       bool receivedCommand( packet_type_t commandToReceive );
       void sendCommand(packet_type_t commandToSend);
 
+      void receiveData(DataStorage &D_VelocityData, DataStorage &T_TempData, DataStorage &T_HumidityData, DataStorage &A_PressureData, DataStorage &A_TempData, float * A_Altitude);
+
+
       sensor_status_t send10m( );
       sensor_status_t transmitData(DOFSensor& dofSensor, AltitudeSensor& altitude_sensor, TemperatureSensor& temperature_sensor, Sensor& gps );
       void transmit1m( float data[], dataPointStatus_t isCollected[], data_type_t dataType  );
