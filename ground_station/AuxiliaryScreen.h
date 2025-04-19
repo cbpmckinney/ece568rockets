@@ -68,7 +68,7 @@ class AuxiliaryScreen {
     void disableShowingData();
     void requestScreen(ScreenEnums::Screen targetScreen);
     void refreshDataPoint(float old_data, float new_data, uint8_t index_x, uint8_t index_y, const char* prefix, const char* suffix="", bool forceInt = false);
-    void refreshDataPoint(int old_data1, int old_data2, int old_data3, int new_data1, int new_data2, int new_data3, uint8_t index_x, uint8_t index_y, const char* separator, const char* prefix);
+    void refreshDataPoint(int old_data1, int old_data2, int old_data3, int new_data1, int new_data2, int new_data3, uint8_t index_x, uint8_t index_y, const char* separator, const char* prefix, bool padZeros=false);
     void updateLocalData(LocalSensorData data);
     void updateRocketData(RocketData data);
 };

@@ -38,28 +38,28 @@ void AuxiliaryScreen::showLocalData() {
     display.println(F("LOCAL DATA"));
 
     // AHT20
-    display.setCursor(0,y_scale*3);
-    display.print(F("Temp (F): ")); display.println(storedLocalData.aht_temp);
     display.setCursor(0,y_scale*4);
+    display.print(F("Temp (F): ")); display.println(storedLocalData.aht_temp);
+    display.setCursor(0,y_scale*5);
     display.print(F("Humid. (% rH): ")); display.println(storedLocalData.aht_humidity);
 
     // BMP390
-    display.setCursor(0,y_scale*5);
-    display.print(F("Temp (F): ")); display.println(storedLocalData.bmp_temperature);
     display.setCursor(0,y_scale*6);
-    display.print(F("Press. (hPa): ")); display.println(storedLocalData.bmp_pressure);
+    display.print(F("Temp (F): ")); display.println(storedLocalData.bmp_temperature);
     display.setCursor(0,y_scale*7);
+    display.print(F("Press. (hPa): ")); display.println(storedLocalData.bmp_pressure);
+    display.setCursor(0,y_scale*8);
     display.print(F("Alt. (m): ")); display.println(storedLocalData.bmp_altitude);
 
     // GPS
     // GPS Date
     display.setCursor(0,y_scale*1);
     display.print(F("Date: ")); 
-        display.print(storedLocalData.gps_month); 
-        display.print("/");
-        display.print(storedLocalData.gps_day);
-        display.print("/");
-        display.println(storedLocalData.gps_year);
+    display.print(storedLocalData.gps_month); 
+    display.print("/");
+    display.print(storedLocalData.gps_day);
+    display.print("/");
+    display.println(storedLocalData.gps_year);
 
     // GPS Time
     display.setCursor(0,y_scale*2);
@@ -71,9 +71,31 @@ void AuxiliaryScreen::showLocalData() {
         display.print(storedLocalData.gps_seconds);
 
     // GPS Satellites
-
-    // GPS Lat and Long
+    display.setCursor(75,y_scale*0);
+    display.print(F("[SAT. ")); display.print((int)storedLocalData.gps_satellites); display.println("]");
     
+    // GPS Lat and Long
+    display.setCursor(0,y_scale*9);
+    display.print(F("Lat.: ")); display.print(storedLocalData.gps_latitude); display.println(storedLocalData.gps_lat);
+
+    display.setCursor(0,y_scale*10);
+    display.print(F("Lon.: ")); display.print(storedLocalData.gps_longitude); display.println(storedLocalData.gps_lon);
+
+    // Angle
+    display.setCursor(0,y_scale*11);
+    display.print(F("Angle (deg): ")); display.println(storedLocalData.gps_angle);
+
+    // Altitude
+    display.setCursor(0,y_scale*12);
+    display.print(F("GPS Alt. (m): ")); display.println(storedLocalData.gps_altitude);
+
+    if (storedLocalData.gps_fix == 0 || storedLocalData.gps_fixquality == 0) {
+        display.setCursor(0,y_scale*14);
+        display.println(F("!BAD GPS CONN.!"));
+    } else {
+        display.setCursor(0,y_scale*14);
+        display.println(F("GPS CONNECTED"));
+    }
 
     display.display();
 }
@@ -156,26 +178,43 @@ void AuxiliaryScreen::refreshDataPoint(float old_data, float new_data, uint8_t i
      
 }
 
-void AuxiliaryScreen::refreshDataPoint(int old_data1, int old_data2, int old_data3, int new_data1, int new_data2, int new_data3, uint8_t index_x, uint8_t index_y, const char* separator, const char* prefix) {
-    display.setTextColor(SH110X_BLACK);
-    display.setCursor(index_x,index_y);
-    display.print(F(prefix));
-    if (old_data1 < 10) { display.print('0'); }
-    display.print(old_data1); display.print(separator);
-    if (old_data2 < 10) { display.print('0'); }
-    display.print(old_data2); display.print(separator);
-    if (old_data3 < 10) { display.print('0'); }
-    display.print(old_data3);
+void AuxiliaryScreen::refreshDataPoint(int old_data1, int old_data2, int old_data3, int new_data1, int new_data2, int new_data3, uint8_t index_x, uint8_t index_y, const char* separator, const char* prefix, bool padZeros) {
+    char padding_char;
+    if (padZeros) {
+        display.setTextColor(SH110X_BLACK);
+        display.setCursor(index_x,index_y);
+        display.print(F(prefix));
+        if (old_data1 < 10) { display.print('0'); }
+        display.print(old_data1); display.print(separator);
+        if (old_data2 < 10) { display.print('0'); }
+        display.print(old_data2); display.print(separator);
+        if (old_data3 < 10) { display.print('0'); }
+        display.println(old_data3);
 
-    display.setTextColor(SH110X_WHITE);
-    display.setCursor(index_x,index_y);
-    display.print(F(prefix));
-    if (new_data1 < 10) { display.print('0'); }
-    display.print(new_data1); display.print(separator);
-    if (new_data2 < 10) { display.print('0'); }
-    display.print(new_data2); display.print(separator);
-    if (new_data3 < 10) { display.print('0'); }
-    display.print(new_data3);
+        display.setTextColor(SH110X_WHITE);
+        display.setCursor(index_x,index_y);
+        display.print(F(prefix));
+        if (new_data1 < 10) { display.print('0'); }
+        display.print(new_data1); display.print(separator);
+        if (new_data2 < 10) { display.print('0'); }
+        display.print(new_data2); display.print(separator);
+        if (new_data3 < 10) { display.print('0'); }
+        display.println(new_data3);
+    } else {
+        display.setTextColor(SH110X_BLACK);
+        display.setCursor(index_x,index_y);
+        display.print(F(prefix));
+        display.print(old_data1); display.print(separator);
+        display.print(old_data2); display.print(separator);
+        display.println(old_data3);
+
+        display.setTextColor(SH110X_WHITE);
+        display.setCursor(index_x,index_y);
+        display.print(F(prefix));
+        display.print(new_data1); display.print(separator);
+        display.print(new_data2); display.print(separator);
+        display.println(new_data3);
+    }
 }
 
 void AuxiliaryScreen::updateLocalData(LocalSensorData input_data) {
@@ -187,28 +226,28 @@ void AuxiliaryScreen::updateLocalData(LocalSensorData input_data) {
             int y_scale = 8;
 
             if (storedLocalData.aht_temp !=  input_data.aht_temp) {
-                refreshDataPoint(storedLocalData.aht_temp, input_data.aht_temp, 0, y_scale*3, "Temp (F): ");
+                refreshDataPoint(storedLocalData.aht_temp, input_data.aht_temp, 0, y_scale*4, "Temp (F): ");
                 storedLocalData.aht_temp = input_data.aht_temp;
             }
 
             if (storedLocalData.aht_humidity != input_data.aht_humidity) {
-                refreshDataPoint(storedLocalData.aht_humidity, input_data.aht_humidity, 0, y_scale*4, "Humid. (% rH): ");
+                refreshDataPoint(storedLocalData.aht_humidity, input_data.aht_humidity, 0, y_scale*5, "Humid. (% rH): ");
                 storedLocalData.aht_humidity = input_data.aht_humidity;
             }
 
             if (storedLocalData.bmp_temperature !=input_data.bmp_temperature) {
-                refreshDataPoint(storedLocalData.bmp_temperature, input_data.bmp_temperature, 0, y_scale*5, "Temp (F): ");
+                refreshDataPoint(storedLocalData.bmp_temperature, input_data.bmp_temperature, 0, y_scale*6, "Temp (F): ");
                 storedLocalData.bmp_temperature =input_data.bmp_temperature;
             }
 
             if (storedLocalData.bmp_pressure != input_data.bmp_pressure) {
-                refreshDataPoint(storedLocalData.bmp_pressure, input_data.bmp_pressure, 0, y_scale*6, "Press. (hPa): ");
+                refreshDataPoint(storedLocalData.bmp_pressure, input_data.bmp_pressure, 0, y_scale*7, "Press. (hPa): ");
                 storedLocalData.bmp_pressure = input_data.bmp_pressure;
             }
 
             if (storedLocalData.bmp_altitude !=input_data.bmp_altitude) {
-                refreshDataPoint(storedLocalData.bmp_altitude, input_data.bmp_altitude, 0, y_scale*7, "Alt. (m): ");
-                storedLocalData.bmp_altitude =input_data.bmp_altitude;
+                refreshDataPoint(storedLocalData.bmp_altitude, input_data.bmp_altitude, 0, y_scale*8, "Alt. (m): ");
+                storedLocalData.bmp_altitude = input_data.bmp_altitude;
             }
 
             // GPS
@@ -226,7 +265,8 @@ void AuxiliaryScreen::updateLocalData(LocalSensorData input_data) {
                     0, 
                     y_scale*1, 
                     "/",
-                    "Date: ");
+                    "Date: ",
+                    false);
 
                 storedLocalData.gps_month = input_data.gps_month;
                 storedLocalData.gps_day = input_data.gps_day;
@@ -248,7 +288,8 @@ void AuxiliaryScreen::updateLocalData(LocalSensorData input_data) {
                                 0, 
                                 y_scale*2, 
                                 ":",
-                                "");
+                                "",
+                                true);
                 
                 storedLocalData.gps_hour = input_data.gps_hour;
                 storedLocalData.gps_minute = input_data.gps_minute;
@@ -263,15 +304,47 @@ void AuxiliaryScreen::updateLocalData(LocalSensorData input_data) {
 
             // GPS Lat and Long
             if (storedLocalData.gps_latitude != input_data.gps_latitude) {
-                refreshDataPoint(storedLocalData.gps_latitude, input_data.gps_latitude, 0, y_scale*8, "Lat.: ", &input_data.gps_lat);
+                refreshDataPoint(storedLocalData.gps_latitude, input_data.gps_latitude, 0, y_scale*9, "Lat.: ", &input_data.gps_lat);
                 storedLocalData.gps_latitude = input_data.gps_latitude;
             }
 
             if (storedLocalData.gps_longitude != input_data.gps_longitude) {
-                refreshDataPoint(storedLocalData.gps_longitude, input_data.gps_longitude, 0, y_scale*9, "Lon.: ", &input_data.gps_lon);
+                refreshDataPoint(storedLocalData.gps_longitude, input_data.gps_longitude, 0, y_scale*10, "Lon.: ", &input_data.gps_lon);
                 storedLocalData.gps_longitude = input_data.gps_longitude;
             }
 
+            // Angle
+            if (storedLocalData.gps_angle !=input_data.gps_angle) {
+                refreshDataPoint(storedLocalData.gps_angle, input_data.gps_angle, 0, y_scale*11, "Angle (deg): ");
+                storedLocalData.gps_angle = input_data.gps_angle;
+            }
+
+            // GPS Altitude
+            if (storedLocalData.gps_altitude !=input_data.gps_altitude) {
+                refreshDataPoint(storedLocalData.gps_altitude, input_data.gps_altitude, 0, y_scale*12, "GPS Alt. (m): ");
+                storedLocalData.gps_altitude = input_data.gps_altitude;
+            }
+
+            // Fix and Fix Quality
+            if ((storedLocalData.gps_fix != input_data.gps_fix) || (storedLocalData.gps_fixquality !=input_data.gps_fixquality)) {
+                
+                if (input_data.gps_fix == 0 || input_data.gps_fixquality == 0) {
+                    display.setTextColor(SH110X_BLACK);
+                    display.setCursor(0,y_scale*14);
+                    display.println(F("GPS CONNECTED"));
+                    display.setTextColor(SH110X_WHITE);
+                    display.println(F("!BAD GPS CONN.!"));
+                } else {
+                    display.setTextColor(SH110X_BLACK);
+                    display.setCursor(0,y_scale*14);
+                    display.println(F("!BAD GPS CONN.!"));
+                    display.setTextColor(SH110X_WHITE);
+                    display.println(F("GPS CONNECTED"));
+                }
+
+                storedLocalData.gps_fix = input_data.gps_fix;
+                storedLocalData.gps_fixquality = input_data.gps_fixquality;
+            }
         }
     }
 

@@ -258,7 +258,6 @@ void MainScreen::jumpToScreen(ScreenEnums::Screen screen) {
 }
 
 void MainScreen::receiveScreenInput(UserInput input) {
-    Serial.println("Called receiveScreenInput");
     uint8_t* cursorIndex = NULL;
     uint8_t* maxScreenIndex = NULL;
     ScreenNavInfo* screenNavInfo = NULL;
@@ -316,7 +315,6 @@ void MainScreen::receiveScreenInput(UserInput input) {
                 // Invalid screen
                 return;
           }
-          Serial.print("Index before: "); Serial.println(*cursorIndex);
     }
 
     // Command handling
@@ -330,7 +328,6 @@ void MainScreen::receiveScreenInput(UserInput input) {
                     prev_x_index = screenNavInfo[*cursorIndex].cursor_x_index;
                     prev_y_index = screenNavInfo[*cursorIndex].cursor_y_index;
                     *cursorIndex = *cursorIndex-1;
-                    Serial.print("Index after: "); Serial.println(*cursorIndex);
 
                     updateScreenCursor(screenNavInfo[*cursorIndex].cursor_x_index, 
                                             screenNavInfo[*cursorIndex].cursor_y_index, 
@@ -457,14 +454,11 @@ void MainScreen::receiveScreenInput(UserInput input) {
             // Invalid input
             return;
       }
-      
-    Serial.println("End receiveScreenInput\n");
 }
 
 void MainScreen::updateScreenCursor(uint8_t x_index, uint8_t y_index, uint8_t prev_x_index, uint8_t prev_y_index) {
     // If there were previous indices passed, use those to remove 
     // the old cursor
-    Serial.print("Create at: ");Serial.print(x_index);Serial.print(", ");Serial.println(y_index);
     if (prev_x_index != 255 && prev_y_index != 255) {
         display.setCursor(16*prev_x_index,16*prev_y_index);
         display.setTextColor(SH110X_BLACK);

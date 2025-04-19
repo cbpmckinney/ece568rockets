@@ -46,14 +46,6 @@ LocalSensorData LocalDataSensors::collectData() {
     if (millis() - data_read_timer > 1000) {
         data_read_timer = millis(); // reset the timer
         if (!skipGPS) {
-            Serial.print("\nTime: ");
-            if (GPS.hour < 10) { Serial.print('0'); }
-            Serial.print(GPS.hour, DEC); Serial.print(':');
-            if (GPS.minute < 10) { Serial.print('0'); }
-            Serial.print(GPS.minute, DEC); Serial.print(':');
-            if (GPS.seconds < 10) { Serial.print('0'); }
-            Serial.print(GPS.seconds, DEC); Serial.print('.');
-
             data.gps_hour = GPS.hour;
             data.gps_minute = GPS.minute;
             data.gps_seconds = GPS.seconds;
@@ -71,29 +63,6 @@ LocalSensorData LocalDataSensors::collectData() {
             data.gps_angle = GPS.angle;
             data.gps_altitude = GPS.altitude;
             data.gps_satellites = GPS.satellites;
-
-            if (GPS.milliseconds < 10) {
-                Serial.print("00");
-            } else if (GPS.milliseconds > 9 && GPS.milliseconds < 100) {
-                Serial.print("0");
-            }
-            Serial.println(GPS.milliseconds);
-            Serial.print("Date: ");
-            Serial.print(GPS.day, DEC); Serial.print('/');
-            Serial.print(data.gps_month); Serial.print("/20");
-            Serial.println(data.gps_year, DEC);
-            Serial.print("Fix: "); Serial.print((int)GPS.fix);
-            Serial.print(" quality: "); Serial.println((int)GPS.fixquality);
-            if (GPS.fix) {
-                Serial.print("Location: ");
-                Serial.print(data.gps_latitude, 4); Serial.print(data.gps_lat);
-                Serial.print(", ");
-                Serial.print(data.gps_longitude, 4); Serial.println(data.gps_lon);
-                Serial.print("Speed (knots): "); Serial.println(data.gps_speed);
-                Serial.print("Angle: "); Serial.println(data.gps_angle);
-                Serial.print("Altitude: "); Serial.println(data.gps_altitude);
-                Serial.print("Satellites: "); Serial.println(data.gps_satellites);
-            }
         }
         
         
@@ -103,24 +72,10 @@ LocalSensorData LocalDataSensors::collectData() {
             data.bmp_temperature = ((bmp.temperature*1.8)+32);
             data.bmp_pressure = bmp.pressure/100.0;
             data.bmp_altitude = bmp.readAltitude(SEALEVELPRESSURE_HPA);
-
-            Serial.print("BMP Temperature = ");
-            Serial.print(bmp.temperature);
-            Serial.println(" *C");
-    
-            Serial.print("BMP Pressure = ");
-            Serial.print(bmp.pressure / 100.0);
-            Serial.println(" hPa");
-    
-            Serial.print("BMP Approx. Altitude = ");
-            Serial.print(bmp.readAltitude(SEALEVELPRESSURE_HPA));
-            Serial.println(" m");
         }
     
         sensors_event_t humidity, temp;
         aht.getEvent(&humidity, &temp);// populate temp and humidity objects with fresh data
-        Serial.print("Temperature: "); Serial.print(temp.temperature); Serial.println(" degrees C");
-        Serial.print("Humidity: "); Serial.print(humidity.relative_humidity); Serial.println("% rH");
         
         data.aht_temp = ((temp.temperature*1.8)+32);
         data.aht_humidity = humidity.relative_humidity;
