@@ -122,7 +122,6 @@ void AuxiliaryScreen::showRocketData() {
 }
 
 void AuxiliaryScreen::jumpToScreen(ScreenEnums::Screen screen) {
-    Serial.print("In jump to screen, going to: "); Serial.println(screen);
     switch (screen) {
         case ScreenEnums::Screen::LOCAL:
             showLocalData();

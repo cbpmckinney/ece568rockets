@@ -215,43 +215,32 @@ void MainScreen::showLaunchWrongPin() {
 }
 
 void MainScreen::jumpToScreen(ScreenEnums::Screen screen) {
-    Serial.print("In jump to screen, going to: "); Serial.println(screen);
     switch (screen) {
         case ScreenEnums::Screen::MENU:
-            Serial.println("Jumped to MENU");
             showMenu();
             break;
         case ScreenEnums::Screen::DATA:
-            Serial.println("Jumped to DATA");
             showDataScreen();
             break;
         case ScreenEnums::Screen::LAUNCH:
-            Serial.println("Jumped to LAUNCH");
             showLaunch();
             break;
         case ScreenEnums::Screen::LAUNCH_WAIT:
-            Serial.println("Jumped to LAUNCH WAIT");
             showLaunchWait();
             break;
         case ScreenEnums::Screen::LAUNCH_SEQ:
-            Serial.println("Jumped to LAUNCH SEQ");
             showLaunchSeq();
             break;
         case ScreenEnums::Screen::LAUNCH_BIG_RED:
-            Serial.println("Jumped to LAUNCH BIG RED");
             showLaunchBigRed();
             break;
         case ScreenEnums::Screen::LAUNCH_WRONG_PIN:
-            Serial.println("Jumped to LAUNCH WRONG PIN");
             showLaunchWrongPin();
-            //TODO
-            break;
-        case ScreenEnums::Screen::SETTINGS:
             //TODO
             break;
         default:
             // Invalid screen
-            Serial.println("No valid screen! Going to main");
+            Serial.println("Jumped to invalid screen! Going to main");
             showMenu();
             return;
       }
@@ -358,7 +347,6 @@ void MainScreen::receiveScreenInput(UserInput input) {
                         prev_x_index = screenNavInfo[*cursorIndex].cursor_x_index;
                         prev_y_index = screenNavInfo[*cursorIndex].cursor_y_index;
                         *cursorIndex = *cursorIndex+1;
-                        Serial.print("Index after: "); Serial.println(*cursorIndex);
 
                         updateScreenCursor(screenNavInfo[*cursorIndex].cursor_x_index, 
                                                 screenNavInfo[*cursorIndex].cursor_y_index, 
@@ -387,7 +375,6 @@ void MainScreen::receiveScreenInput(UserInput input) {
 
             if (currentScreen != ScreenEnums::Screen::LAUNCH_SEQ and currentScreen != ScreenEnums::Screen::DATA) 
             {
-                Serial.print("Jumping to: "); Serial.println(targetScreen);
                 jumpToScreen(targetScreen);
             } 
             else if (currentScreen == ScreenEnums::Screen::LAUNCH_SEQ) 

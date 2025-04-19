@@ -205,7 +205,6 @@ void loop() {
     // ARM---------------------------------------
     case GroundStation::STATE::ARM:
       if (keyInserted()) {
-        Serial.println("Key inserted");
         mainScreen.key_inserted = true;
       } 
       else
@@ -214,8 +213,8 @@ void loop() {
       }
 
       if (mainScreen.ready_to_submit_pin) {
-        //User is about to submit pin, check if correct as
-        //changes cannot be made now
+        // User is about to submit pin, check if correct as
+        // changes cannot be made now
         pin = mainScreen.getInputPin();
 
        if (validatePin(pin)) {
@@ -227,7 +226,7 @@ void loop() {
         // User (screen) gave go-ahead on priming rocket.
         // Send message to rocket signifying ground station ready to PRIME
         //  *requires a response back
-        // Make big red button glow
+        // This continuously sends, maybe not?
         rfManager.sendCommand(RTL_PACKET);
       }
 
@@ -353,7 +352,7 @@ void loop() {
 */
 void processStateBypassSerialCommands() {
   if (Serial.available() > 0) {
-    Serial.print("Received serial input");
+    Serial.println("Received serial input");
 
     char incomingSerialData[16];
     int index = 0;
@@ -426,7 +425,17 @@ void processStateBypassSerialCommands() {
     } 
     else if (strstr(incomingSerialData, "?")) 
     {
-      Serial.print("Current state is: "); Serial.println(state);
+      Serial.print("    BOOTUP = ");    Serial.println("0");
+      Serial.print("    CONN_WAIT = "); Serial.println("1");
+      Serial.print("    SAFE = ");      Serial.println("2");
+      Serial.print("    ARM = ");       Serial.println("3");
+      Serial.print("    PRIME = ");     Serial.println("4");
+      Serial.print("    FIRE = ");      Serial.println("5");
+      Serial.print("    COLLECT = ");   Serial.println("6");
+      Serial.print("    RECOVERY = ");  Serial.println("7");
+      Serial.print("    ERR = ");       Serial.println("8");
+      Serial.print("Current ground station state is: "); Serial.println(state);
+        
     }
   }
 }
@@ -515,7 +524,9 @@ void processUserInput() {
 
   if (direction == -1 && buttonState == 0) {
     mainScreen.receiveScreenInput(ENC_LEFT);
-  } else if (direction == 1 && buttonState == 0) {
+  } 
+  else if (direction == 1 && buttonState == 0) 
+  {
     mainScreen.receiveScreenInput(ENC_RIGHT);
   } 
   else if (buttonState == 1 && previousButtonState == 0) 
@@ -524,7 +535,6 @@ void processUserInput() {
     if (millis() - lastButtonPressTime > BUTTON_PRESS_LIMIT)
     {
       // Reduce effect of rapid pressing or spurious inputs.
-      Serial.println("Received button press");
       mainScreen.receiveScreenInput(ENC_PRESS);
       lastButtonPressTime = millis();
     }
