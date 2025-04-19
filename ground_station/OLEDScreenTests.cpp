@@ -28,19 +28,19 @@ void testDataScreen(MainScreen main_screen, AuxiliaryScreen aux_screen) {
 
     delay(4*DEBUG_TIME_SCALE);
 
-    LocalData testData1 = {97, 88, 102, 1};
+    LocalSensorData testData1 = {97, 88, 102, 1};
 
     aux_screen.updateLocalData(testData1);
 
     delay(4*DEBUG_TIME_SCALE);
 
-    LocalData testData2 = {85, 88, 102, 1};
+    LocalSensorData testData2 = {85, 88, 102, 1};
 
     aux_screen.updateLocalData(testData2);
 
     delay(4*DEBUG_TIME_SCALE);
 
-    LocalData testData3 = {85, 88, 23, 0};
+    LocalSensorData testData3 = {85, 88, 23, 0};
 
     aux_screen.updateLocalData(testData3);
 

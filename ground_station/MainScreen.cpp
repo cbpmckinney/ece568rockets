@@ -215,50 +215,38 @@ void MainScreen::showLaunchWrongPin() {
 }
 
 void MainScreen::jumpToScreen(ScreenEnums::Screen screen) {
-    Serial.print("In jump to screen, going to: "); Serial.println(screen);
     switch (screen) {
         case ScreenEnums::Screen::MENU:
-            Serial.println("Jumped to MENU");
             showMenu();
             break;
         case ScreenEnums::Screen::DATA:
-            Serial.println("Jumped to DATA");
             showDataScreen();
             break;
         case ScreenEnums::Screen::LAUNCH:
-            Serial.println("Jumped to LAUNCH");
             showLaunch();
             break;
         case ScreenEnums::Screen::LAUNCH_WAIT:
-            Serial.println("Jumped to LAUNCH WAIT");
             showLaunchWait();
             break;
         case ScreenEnums::Screen::LAUNCH_SEQ:
-            Serial.println("Jumped to LAUNCH SEQ");
             showLaunchSeq();
             break;
         case ScreenEnums::Screen::LAUNCH_BIG_RED:
-            Serial.println("Jumped to LAUNCH BIG RED");
             showLaunchBigRed();
             break;
         case ScreenEnums::Screen::LAUNCH_WRONG_PIN:
-            Serial.println("Jumped to LAUNCH WRONG PIN");
             showLaunchWrongPin();
-            //TODO
-            break;
-        case ScreenEnums::Screen::SETTINGS:
             //TODO
             break;
         default:
             // Invalid screen
-            Serial.println("No valid screen! Going to main");
+            Serial.println("Jumped to invalid screen! Going to main");
             showMenu();
             return;
       }
 }
 
 void MainScreen::receiveScreenInput(UserInput input) {
-    Serial.println("Called receiveScreenInput");
     uint8_t* cursorIndex = NULL;
     uint8_t* maxScreenIndex = NULL;
     ScreenNavInfo* screenNavInfo = NULL;
@@ -316,7 +304,6 @@ void MainScreen::receiveScreenInput(UserInput input) {
                 // Invalid screen
                 return;
           }
-          Serial.print("Index before: "); Serial.println(*cursorIndex);
     }
 
     // Command handling
@@ -330,7 +317,6 @@ void MainScreen::receiveScreenInput(UserInput input) {
                     prev_x_index = screenNavInfo[*cursorIndex].cursor_x_index;
                     prev_y_index = screenNavInfo[*cursorIndex].cursor_y_index;
                     *cursorIndex = *cursorIndex-1;
-                    Serial.print("Index after: "); Serial.println(*cursorIndex);
 
                     updateScreenCursor(screenNavInfo[*cursorIndex].cursor_x_index, 
                                             screenNavInfo[*cursorIndex].cursor_y_index, 
@@ -361,7 +347,6 @@ void MainScreen::receiveScreenInput(UserInput input) {
                         prev_x_index = screenNavInfo[*cursorIndex].cursor_x_index;
                         prev_y_index = screenNavInfo[*cursorIndex].cursor_y_index;
                         *cursorIndex = *cursorIndex+1;
-                        Serial.print("Index after: "); Serial.println(*cursorIndex);
 
                         updateScreenCursor(screenNavInfo[*cursorIndex].cursor_x_index, 
                                                 screenNavInfo[*cursorIndex].cursor_y_index, 
@@ -390,7 +375,6 @@ void MainScreen::receiveScreenInput(UserInput input) {
 
             if (currentScreen != ScreenEnums::Screen::LAUNCH_SEQ and currentScreen != ScreenEnums::Screen::DATA) 
             {
-                Serial.print("Jumping to: "); Serial.println(targetScreen);
                 jumpToScreen(targetScreen);
             } 
             else if (currentScreen == ScreenEnums::Screen::LAUNCH_SEQ) 
@@ -457,14 +441,11 @@ void MainScreen::receiveScreenInput(UserInput input) {
             // Invalid input
             return;
       }
-      
-    Serial.println("End receiveScreenInput\n");
 }
 
 void MainScreen::updateScreenCursor(uint8_t x_index, uint8_t y_index, uint8_t prev_x_index, uint8_t prev_y_index) {
     // If there were previous indices passed, use those to remove 
     // the old cursor
-    Serial.print("Create at: ");Serial.print(x_index);Serial.print(", ");Serial.println(y_index);
     if (prev_x_index != 255 && prev_y_index != 255) {
         display.setCursor(16*prev_x_index,16*prev_y_index);
         display.setTextColor(SH110X_BLACK);
