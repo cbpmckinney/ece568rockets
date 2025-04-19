@@ -50,6 +50,15 @@ namespace GroundStation {
 };
 
 
+
+
+
+
+
+
+
+
+
 // Ground station
 GroundStation::STATE state = GroundStation::STATE::ERR;
 
@@ -59,6 +68,15 @@ AuxiliaryScreen auxScreen = AuxiliaryScreen();
 LocalData groundStationData;
 RocketData receivedRocketData;
 uint8_t* pin = NULL;
+
+
+DataStorage D_VelocityData;
+DataStorage T_TempData;
+DataStorage T_HumidityData;
+DataStorage A_PressureData;
+DataStorage A_TempData;
+float A_Altitude;
+
 
 unsigned long lastButtonPressTime = 0;
 
@@ -296,6 +314,7 @@ void loop() {
         incomingByte = Serial.read();
         Serial.println("Button pressed: launching!");
         rfManager.sendCommand(LAUNCH_PACKET);
+        state = GroundStation::STATE::COLLECT;
       }
 
       last_button_state = read_button_value;
@@ -310,7 +329,19 @@ void loop() {
       break;
 
     case GroundStation::STATE::COLLECT:
-      Serial.println("COLLECT");
+      //Serial.println("COLLECT");
+      rfManager.receiveData(D_VelocityData, T_TempData, T_HumidityData, A_PressureData, A_TempData, &A_Altitude);
+      Serial.print("Velocity: ");
+      Serial.println(D_VelocityData.average);
+      
+      //Serial.print("Temperature: ");
+      //Serial.println(T_TempData.average);
+      //Serial.print("Humidity: ");
+      //Serial.println(T_HumidityData.average);
+      //Serial.print("Pressure: ");
+      //Serial.println(A_PressureData.average);
+
+      
       // processUserInput( to show);?
       // Force data screen?
       // Receive radio information, make that top priority

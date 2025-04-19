@@ -40,3 +40,10 @@ union sensorStatus {
     } bits;
 };
 
+typedef struct
+{
+  float average;
+  float peak;
+  float per1mDataArray[100];
+} DataStorage;
+

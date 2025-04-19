@@ -110,7 +110,8 @@ void RFManager::tx(char *str_num, int size) {
   #endif
 
   rf95.send((uint8_t *)str_num, size); // might have to adjust packet size
-  delay(1);
+  rf95.waitPacketSent();
+  //delay(1);
 }
 
 
@@ -189,6 +190,7 @@ void RFManager::txNoSave(char *str_num, int size) {
   }
   #endif
   rf95.send((uint8_t *)str_num, size); // might have to adjust packet size
+  rf95.waitPacketSent();
 }
 
 void RFManager::sendStatus( sensorStatus currStatus, rocket_states_t currState  )
@@ -267,6 +269,7 @@ void RFManager::transmit1m( float data[], dataPointStatus_t isCollected[], data_
 
           case SET_DATA:
           {
+              Serial.println("SETTING DATA:");
               uint8_t toSendArray[7];
               toSendArray[0] = M_DATA_PACKET;
               toSendArray[1] = dataType;
