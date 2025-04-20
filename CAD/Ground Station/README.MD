@@ -1,4 +1,4 @@
-<div style="text-align: center;">
+<p align="center">
 # 3D Printed Parts Orientation
 
 The following 3D printed parts shall be oriented on the print bed as follows:
