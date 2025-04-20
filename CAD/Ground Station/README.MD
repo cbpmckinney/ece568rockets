@@ -1,1 +1,1 @@
-https://github.com/cbpmckinney/ece568rockets/blob/13e82991051bde2cd300006fcc71cf3c4da1597c/CAD/Ground%20Station/ground_station_box_3d_print_layout.png
+CAD/Ground Station/ground_station_lid_3d_print_layout.png
