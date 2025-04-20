@@ -1,4 +1,4 @@
-#The following 3D printed parts shall be oriented on the print bed as follows:
+# The following 3D printed parts shall be oriented on the print bed as follows:
 
 
 ## Bay
