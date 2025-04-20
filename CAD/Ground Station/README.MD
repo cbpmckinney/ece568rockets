@@ -2,8 +2,8 @@
 
 The following 3D printed parts shall be oriented on the print bed as follows:
 
-<p align="center">
-## Lid
+
+## <p align="center"> Lid
 ![Lid Image](https://github.com/cbpmckinney/ece568rockets/blob/cf260ce2ac893da4f6732ee6810229ab88532afd/CAD/Ground%20Station/ground_station_lid_3d_print_layout.png)
 
 <p align="center">
