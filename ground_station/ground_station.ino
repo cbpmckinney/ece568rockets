@@ -14,6 +14,7 @@ William Li
 #include "OLEDScreenTests.h"
 #include "RFManager.h"
 #include "LocalDataSensors.h"
+#include <Adafruit_GPS.h>
 
 // Launch Code
 #define PIN_VALUE_1 2
@@ -77,6 +78,8 @@ DataStorage T_HumidityData;
 DataStorage A_PressureData;
 DataStorage A_TempData;
 float A_Altitude;
+
+GPSDataStorage RocketGPSData;
 
 bool LaunchCommandSent = false;
 unsigned long lastButtonPressTime = 0;
@@ -447,6 +450,12 @@ void loop() {
     case GroundStation::STATE::RECOVERY:
       // processUserInput();?
       // Update AUX screen with coordinates and arrow?
+
+      rfManager.receiveGPSData(RocketGPSData);
+      Serial.print("Landing LAT: ");
+      Serial.print(RocketGPSData.latitude);
+      Serial.print(" ");
+      Serial.println(RocketGPSData.lat);
 
       // Allow serial commands to change state
       processStateBypassSerialCommands();

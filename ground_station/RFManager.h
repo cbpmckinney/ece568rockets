@@ -17,7 +17,8 @@ typedef enum
     AVERAGE_DATA_PACKET,
     ALTITUDE_PACKET,
     VERIFY_DATA,
-    REINITIALIZE
+    REINITIALIZE,
+    GPS_PACKET
 
 } packet_type_t;
 
@@ -28,7 +29,8 @@ typedef enum
     ALTITUDE_PRESSURE,
     TEMPERATURE_TEMPERATURE,
     TEMPERATURE_HUMIDITY,
-    ALTITUDE
+    ALTITUDE,
+    GPS_DATA
 } data_type_t;
 
 class RFManager 
@@ -43,6 +45,8 @@ class RFManager
       void sendCommand(packet_type_t commandToSend);
 
       void receiveData(DataStorage &D_VelocityData, DataStorage &T_TempData, DataStorage &T_HumidityData, DataStorage &A_PressureData, DataStorage &A_TempData, float * A_Altitude);
+
+      void receiveGPSData(GPSDataStorage &RocketGPSData);
 
 
       sensor_status_t send10m( );

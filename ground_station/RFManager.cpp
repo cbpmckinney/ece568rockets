@@ -115,7 +115,6 @@ void RFManager::receiveStatus(uint8_t * outbuf)
 
 
 void RFManager::receiveData(DataStorage &D_VelocityData, DataStorage &T_TempData, DataStorage &T_HumidityData, DataStorage &A_PressureData, DataStorage &A_TempData, float * A_Altitude)
-
 {
 
   if (rf95.available())
@@ -229,7 +228,40 @@ void RFManager::receiveData(DataStorage &D_VelocityData, DataStorage &T_TempData
 }
 
 
+void RFManager::receiveGPSData(GPSDataStorage &RocketGPSData)
+{
 
+  if (rf95.available())
+  {
+    uint8_t buf[16];
+    uint8_t len = sizeof(buf);
+
+    if (rf95.recv(buf, &len))
+    {
+      if (buf[0] == GPS_PACKET)
+      {
+        float latitude;
+        float longitude;
+        char lat;
+        char lon;
+        float gpsalt;
+
+        memcpy(&latitude, &buf[2], sizeof(float));
+        memcpy(&longitude, &buf[6], sizeof(float));
+        memcpy(&lat, &buf[10], sizeof(char));
+        memcpy(&lon, &buf[11], sizeof(char));
+        memcpy(&gpsalt, &buf[12], sizeof(float));
+          
+
+        RocketGPSData.latitude = latitude;
+        RocketGPSData.longitude = longitude;
+        RocketGPSData.lat = lat;
+        RocketGPSData.lon = lon;
+        RocketGPSData.gpsalt = gpsalt;
+      }
+    }
+  }
+}
 
 
 
