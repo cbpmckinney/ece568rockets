@@ -90,7 +90,7 @@ void RFManager::receiveStatus(uint8_t * outbuf)
 
   if (rf95.available())
   {
-    Serial.println("RF95 Available");
+    //Serial.println("RF95 Available");
     uint8_t buf[20]; // for now im using size 20
     uint8_t len = sizeof(buf);
     if( rf95.recv(buf, &len) )

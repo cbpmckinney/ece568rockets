@@ -63,6 +63,7 @@ void loop() {
   #ifdef TEST_MODE_ON_GROUND
   static bool isFlying = false;
   static bool doneFlying = false;
+  static bool recoveryStarted = false;
   #endif
 
   switch( currRocketState )
@@ -121,7 +122,7 @@ void loop() {
         }
         if( armCommandReceived )
         {
-          delay(1000);
+          //delay(1000);
         #ifdef DEBUG
           firstEntry = true;
         #endif
@@ -179,8 +180,11 @@ void loop() {
           currRocketState = LAUNCH;
           Serial.println("Sending LAUNCH status to Ground Station");
           rfManager.sendStatus( statusByte, currRocketState );
+          Serial.println("Launch ACK sent");
         } 
         break;
+
+
       case LAUNCH:
         //#ifdef DEBUG I need this to run regardless of debugging, so the timer only gets started once
           if ( firstEntry )
@@ -199,6 +203,7 @@ void loop() {
           firstEntry = true;
           #endif
           currRocketState = FLIGHT;
+          Serial.println("ROCKET IN FLIGHT");
           rfManager.sendStatus( statusByte, currRocketState );
         }
         #else
@@ -208,6 +213,7 @@ void loop() {
             firstEntry = true;
           #endif
           currRocketState = FLIGHT;
+          Serial.println("ROCKET IN FLIGHT");
           rfManager.sendStatus( statusByte, currRocketState );
         }
         #endif
@@ -239,7 +245,7 @@ void loop() {
 
           statusByte.bits.gps                = gps.collectData(); // probably just velocity
         
-          statusByte.bits.RFtransmitter          = rfManager.transmitData( dofSensor, altitude_sensor, temperature_sensor, gps );
+          //statusByte.bits.RFtransmitter          = rfManager.transmitData( dofSensor, altitude_sensor, temperature_sensor, gps );
         //   COMMENT THIS NEXT SECTION OUT IF YOU ARE RUNNING ON YOUR COMPUTER ON THE GROUND OR IT WILL INSTANTLY TRANSITION
           // #ifdef TEST_MODE_ON_GROUND
           // if( doneFlying )
@@ -263,8 +269,14 @@ void loop() {
           break;
         
       case RECOVERY:
+        if (!recoveryStarted)
+        {
+          digitalWrite(RelayPin, LOW); // make sure relay is off...should have been turned off earlier anyway
+          Serial.println("Recovery Started");
+          recoveryStarted = true;
+          rfManager.sendStatus(statusByte, currRocketState);
+        }
 
-        digitalWrite(RelayPin, LOW); // make sure relay is off...should have been turned off earlier anyway
 
       #ifdef DEBUG
         if( firstEntry )
