@@ -15,6 +15,12 @@
 #define DEBUG 1
 #define RelayPin 25
 
+
+
+
+
+
+
 void setup() {
 #ifdef DEBUG
   Serial.begin(115200);
@@ -26,6 +32,15 @@ void setup() {
   digitalWrite(RelayPin, LOW); // set relay to off
   // put your setup code here, to run once:
 }
+
+alarm_id_t TimerID;
+int64_t RelayCallback(alarm_id_t id, void *user_data)
+{
+  digitalWrite(RelayPin, LOW);
+  return 0;
+}
+
+
 
 void loop() {
   static rocket_states_t currRocketState = BOOTUP;
@@ -167,15 +182,16 @@ void loop() {
         } 
         break;
       case LAUNCH:
-        #ifdef DEBUG
+        //#ifdef DEBUG I need this to run regardless of debugging, so the timer only gets started once
           if ( firstEntry )
           {
             firstEntry = false;
             Serial.println("ROCKET IN LAUNCH");
+            digitalWrite(RelayPin, HIGH); // fires relay
+            TimerID = add_alarm_in_ms(5000, RelayCallback, NULL, false);
           }
-        #endif
-  //    digitalWrite(RelayPin, HIGH); // fires relay
-        // need to set this back to low, perhaps when flying?
+        //#endif
+
         #ifdef TEST_MODE_ON_GROUND
         if( isFlying )
         {
@@ -198,13 +214,20 @@ void loop() {
         break;
 
       case FLIGHT:
-        #ifdef DEBUG
+
+
+
+
+        //#ifdef DEBUG
           if( firstEntry )
           {
             firstEntry = false;
             Serial.println("ROCKET IN FLIGHT");
+            digitalWrite(RelayPin, LOW);
+            cancel_alarm(TimerID);
+            rfManager.sendStatus(statusByte, currRocketState);
           }
-        #endif
+        //#endif
           statusByte.bits.altitude_sensor    = altitude_sensor.collectData( );
           #ifdef TEST_MODE_ON_GROUND
           statusByte.bits.temperature_sensor = temperature_sensor.collectData( simAltitude );
@@ -240,6 +263,9 @@ void loop() {
           break;
         
       case RECOVERY:
+
+        digitalWrite(RelayPin, LOW); // make sure relay is off...should have been turned off earlier anyway
+
       #ifdef DEBUG
         if( firstEntry )
         {

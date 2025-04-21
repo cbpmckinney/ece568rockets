@@ -191,11 +191,6 @@ void loop() {
       */
 
       rfManager.receiveStatus(statbuf);
-      
-      if (statbuf[2] != 0)
-      {
-        Serial.println(statbuf[2]);
-      }
 
       if (statbuf[2] == ARM)
       {
@@ -321,6 +316,16 @@ void loop() {
         incomingByte = Serial.read();
         Serial.println("Button pressed: launching!");
         rfManager.sendCommand(LAUNCH_PACKET);
+        state = GroundStation::STATE::COLLECT;
+      }
+
+      rfManager.receiveStatus(statbuf);
+
+      if (statbuf[2] == FLIGHT)
+      {
+        Serial.println("Rocket in FLIGHT");
+        mainScreen.rocket_armed = true;
+        updateLEDColor(255,45,11);
         state = GroundStation::STATE::COLLECT;
       }
 
