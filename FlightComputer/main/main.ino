@@ -108,7 +108,7 @@ void loop() {
           currRocketState = SAFE;
           Serial.println("Going to SAFE mode...");
           rfManager.sendStatus( statusByte, currRocketState );
-          currRocketState = RECOVERY; // just for testingå
+          //currRocketState = RECOVERY; // just for testingå
         }
         else
         {
