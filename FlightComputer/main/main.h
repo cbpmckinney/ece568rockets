@@ -40,6 +40,16 @@ union sensorStatus {
     } bits;
 };
 
+typedef struct
+{
+    float latitude;
+    float longitude;
+    char lat;
+    char lon;
+    float gpsalt;
+} GPSDataStorage;
+
+
 #define TEST_MODE_ON_GROUND 1
 #ifdef TEST_MODE_ON_GROUND
 extern uint8_t simAltitude;

@@ -16,6 +16,7 @@ Chris Silman
 
 #include "Screen.h"
 #include "LocalDataSensors.h"
+#include <Adafruit_GPS.h>
 
 // Expected structure of local data
 struct LocalData {
@@ -23,6 +24,11 @@ struct LocalData {
     int humidity;
     int altitude;
     int pressure;
+    
+    nmea_float_t latitude;
+    nmea_float_t longitude;
+    char lat;   // for N/S
+    char lon;   // for E/W
     int gps; // temporary, likely will be an array
 };
 
@@ -40,6 +46,12 @@ struct RocketData {
     int magneticFieldStrengthVector;
     int linearAccelerationVector;
     int gravityVector;
+
+    nmea_float_t latitude;
+    nmea_float_t longitude;
+    char lat;   // for N/S
+    char lon;   // for E/W
+
 };
 
 #include <Adafruit_GFX.h>

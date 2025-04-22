@@ -7,6 +7,8 @@
 #include <SPI.h>
 #include <RH_RF95.h>
 #include <RHReliableDatagram.h>
+//#include <Wire.h>
+#include <Adafruit_GPS.h>
 
 #ifdef TEST_MODE_ON_GROUND
   uint8_t simAltitude = 0;
@@ -14,6 +16,12 @@
 
 #define DEBUG 1
 #define RelayPin 25
+#define GPSECHO false
+
+Adafruit_GPS GPS(&Wire);
+uint32_t timer = millis();
+
+GPSDataStorage RocketGPSData;
 
 void setup() {
 #ifdef DEBUG
@@ -24,8 +32,24 @@ void setup() {
 #endif
   pinMode(RelayPin, OUTPUT); // relay output pin
   digitalWrite(RelayPin, LOW); // set relay to off
+  Serial.println("Initializing GPS");
+  GPS.begin(0x10);
+  GPS.sendCommand(PMTK_SET_NMEA_OUTPUT_RMCGGA);
+  GPS.sendCommand(PMTK_SET_NMEA_UPDATE_1HZ);
+  GPS.sendCommand(PGCMD_ANTENNA);
+  delay(1000);
+  GPS.println(PMTK_Q_RELEASE);
   // put your setup code here, to run once:
 }
+
+alarm_id_t TimerID;
+int64_t RelayCallback(alarm_id_t id, void *user_data)
+{
+  digitalWrite(RelayPin, LOW);
+  return 0;
+}
+
+
 
 void loop() {
   static rocket_states_t currRocketState = BOOTUP;
@@ -34,6 +58,7 @@ void loop() {
   static AltitudeSensor altitude_sensor;
   static TemperatureSensor temperature_sensor;
   static Sensor gps;
+
   static RFManager rfManager;
   static bool armCommandReceived = false;
   static bool readyCommandReceived = false;
@@ -48,6 +73,7 @@ void loop() {
   #ifdef TEST_MODE_ON_GROUND
   static bool isFlying = false;
   static bool doneFlying = false;
+  static bool recoveryStarted = false;
   #endif
 
   switch( currRocketState )
@@ -66,6 +92,7 @@ void loop() {
           {
             firstEntry = false;
             Serial.println("ROCKET IN BOOTUP");
+
           }
         #endif
         statusByte.bits.dof_sensor         = dofSensor.initialize();   // testing without DOF
@@ -81,6 +108,7 @@ void loop() {
           currRocketState = SAFE;
           Serial.println("Going to SAFE mode...");
           rfManager.sendStatus( statusByte, currRocketState );
+          //currRocketState = RECOVERY; // just for testingå
         }
         else
         {
@@ -106,7 +134,7 @@ void loop() {
         }
         if( armCommandReceived )
         {
-          delay(1000);
+          //delay(1000);
         #ifdef DEBUG
           firstEntry = true;
         #endif
@@ -164,18 +192,22 @@ void loop() {
           currRocketState = LAUNCH;
           Serial.println("Sending LAUNCH status to Ground Station");
           rfManager.sendStatus( statusByte, currRocketState );
+          Serial.println("Launch ACK sent");
         } 
         break;
+
+
       case LAUNCH:
-        #ifdef DEBUG
+        //#ifdef DEBUG I need this to run regardless of debugging, so the timer only gets started once
           if ( firstEntry )
           {
             firstEntry = false;
             Serial.println("ROCKET IN LAUNCH");
+            digitalWrite(RelayPin, HIGH); // fires relay
+            TimerID = add_alarm_in_ms(5000, RelayCallback, NULL, false);
           }
-        #endif
-  //    digitalWrite(RelayPin, HIGH); // fires relay
-        // need to set this back to low, perhaps when flying?
+        //#endif
+
         #ifdef TEST_MODE_ON_GROUND
         if( isFlying )
         {
@@ -183,6 +215,7 @@ void loop() {
           firstEntry = true;
           #endif
           currRocketState = FLIGHT;
+          Serial.println("ROCKET IN FLIGHT");
           rfManager.sendStatus( statusByte, currRocketState );
         }
         #else
@@ -192,19 +225,27 @@ void loop() {
             firstEntry = true;
           #endif
           currRocketState = FLIGHT;
+          Serial.println("ROCKET IN FLIGHT");
           rfManager.sendStatus( statusByte, currRocketState );
         }
         #endif
         break;
 
       case FLIGHT:
-        #ifdef DEBUG
+
+
+
+
+        //#ifdef DEBUG
           if( firstEntry )
           {
             firstEntry = false;
             Serial.println("ROCKET IN FLIGHT");
+            digitalWrite(RelayPin, LOW);
+            cancel_alarm(TimerID);
+            rfManager.sendStatus(statusByte, currRocketState);
           }
-        #endif
+        //#endif
           statusByte.bits.altitude_sensor    = altitude_sensor.collectData( );
           #ifdef TEST_MODE_ON_GROUND
           statusByte.bits.temperature_sensor = temperature_sensor.collectData( simAltitude );
@@ -216,7 +257,7 @@ void loop() {
 
           statusByte.bits.gps                = gps.collectData(); // probably just velocity
         
-          statusByte.bits.RFtransmitter          = rfManager.transmitData( dofSensor, altitude_sensor, temperature_sensor, gps );
+          statusByte.bits.RFtransmitter  = rfManager.transmitData(dofSensor, altitude_sensor, temperature_sensor);
         //   COMMENT THIS NEXT SECTION OUT IF YOU ARE RUNNING ON YOUR COMPUTER ON THE GROUND OR IT WILL INSTANTLY TRANSITION
           // #ifdef TEST_MODE_ON_GROUND
           // if( doneFlying )
@@ -240,6 +281,30 @@ void loop() {
           break;
         
       case RECOVERY:
+        if (!recoveryStarted)
+        {
+          digitalWrite(RelayPin, LOW); // make sure relay is off...should have been turned off earlier anyway
+          Serial.println("Recovery Started");
+          recoveryStarted = true;
+          rfManager.sendStatus(statusByte, currRocketState);
+        }
+
+        GetGPSData();
+        if (RocketGPSData.latitude != 0)
+        {
+          rfManager.transmitGPS(RocketGPSData);
+          Serial.print("Rocket LAT: ");
+          Serial.print(RocketGPSData.latitude/100);
+          Serial.print(" ");
+          Serial.println(RocketGPSData.lat);
+          delay(1000);
+        }
+        //delay(2000);
+        
+
+
+
+
       #ifdef DEBUG
         if( firstEntry )
         {
@@ -381,3 +446,68 @@ void loop() {
   #endif
 #endif
 }
+
+
+void GetGPSData()
+{
+  // read data from the GPS in the 'main loop'
+  char c = GPS.read();
+  // if you want to debug, this is a good time to do it!
+  if (GPSECHO)
+    if (c) Serial.print(c);
+  // if a sentence is received, we can check the checksum, parse it...
+  if (GPS.newNMEAreceived()) {
+    // a tricky thing here is if we print the NMEA sentence, or data
+    // we end up not listening and catching other sentences!
+    // so be very wary if using OUTPUT_ALLDATA and trying to print out data
+    //Serial.println(GPS.lastNMEA()); // this also sets the newNMEAreceived() flag to false
+    if (!GPS.parse(GPS.lastNMEA())) // this also sets the newNMEAreceived() flag to false
+      return; // we can fail to parse a sentence in which case we should just wait for another
+  }
+
+  // approximately every 2 seconds or so, print out the current stats
+  if (millis() - timer > 2000) {
+    timer = millis(); // reset the timer
+    Serial.print("\nTime: ");
+    if (GPS.hour < 10) { Serial.print('0'); }
+    Serial.print(GPS.hour, DEC); Serial.print(':');
+    if (GPS.minute < 10) { Serial.print('0'); }
+    Serial.print(GPS.minute, DEC); Serial.print(':');
+    if (GPS.seconds < 10) { Serial.print('0'); }
+    Serial.print(GPS.seconds, DEC); Serial.print('.');
+    if (GPS.milliseconds < 10) {
+      Serial.print("00");
+    } else if (GPS.milliseconds > 9 && GPS.milliseconds < 100) {
+      Serial.print("0");
+    }
+    Serial.println(GPS.milliseconds);
+    Serial.print("Date: ");
+    Serial.print(GPS.day, DEC); Serial.print('/');
+    Serial.print(GPS.month, DEC); Serial.print("/20");
+    Serial.println(GPS.year, DEC);
+    Serial.print("Fix: "); Serial.print((int)GPS.fix);
+    Serial.print(" quality: "); Serial.println((int)GPS.fixquality);
+    if (GPS.fix) {
+      //Serial.print("Location: ");
+      //Serial.print(GPS.latitude, 4); Serial.print(GPS.lat);
+      //Serial.print(", ");
+      //Serial.print(GPS.longitude, 4); Serial.println(GPS.lon);
+      //Serial.print("Speed (knots): "); Serial.println(GPS.speed);
+      //Serial.print("Angle: "); Serial.println(GPS.angle);
+      //Serial.print("Altitude: "); Serial.println(GPS.altitude);
+      //Serial.print("Satellites: "); Serial.println((int)GPS.satellites);
+
+      RocketGPSData.latitude = GPS.latitude;
+      RocketGPSData.longitude = GPS.longitude;
+      RocketGPSData.lat = GPS.lat;
+      RocketGPSData.lon = GPS.lon;
+      RocketGPSData.gpsalt = GPS.altitude;
+    }
+  }
+}
+
+
+
+
+
+

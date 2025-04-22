@@ -5,6 +5,8 @@
 #include "altitudeSensor.h"
 #include "temperatureSensor.h"
 #include "RFManager.h"
+#include <Adafruit_GPS.h>
+
 typedef enum
 {
     STATUS,
@@ -17,7 +19,8 @@ typedef enum
     AVERAGE_DATA_PACKET,
     ALTITUDE_PACKET,
     VERIFY_DATA,
-    REINITIALIZE
+    REINITIALIZE,
+    GPS_PACKET
 
 } packet_type_t;
 
@@ -28,7 +31,8 @@ typedef enum
     ALTITUDE_PRESSURE,
     TEMPERATURE_TEMPERATURE,
     TEMPERATURE_HUMIDITY,
-    ALTITUDE
+    ALTITUDE,
+    GPS_DATA
 } data_type_t;
 
 class RFManager 
@@ -38,7 +42,8 @@ class RFManager
       void sendStatus( sensorStatus currStatus, rocket_states_t currState  );
       bool receivedCommand( packet_type_t commandToReceive );
       sensor_status_t send10m( );
-      sensor_status_t transmitData(DOFSensor& dofSensor, AltitudeSensor& altitude_sensor, TemperatureSensor& temperature_sensor, Sensor& gps );
+      void transmitGPS(GPSDataStorage &RocketGPSData);
+      sensor_status_t transmitData(DOFSensor& dofSensor, AltitudeSensor& altitude_sensor, TemperatureSensor& temperature_sensor);
       void transmit1m( float data[], dataPointStatus_t isCollected[], data_type_t dataType  );
       void transmitAltitude( float data, data_type_t dataType );
       void transmitAverage( float data, data_type_t dataType );

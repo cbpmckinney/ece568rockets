@@ -47,3 +47,12 @@ typedef struct
   float per1mDataArray[100];
 } DataStorage;
 
+typedef struct
+{
+    float latitude;
+    float longitude;
+    char lat;
+    char lon;
+    float gpsalt;
+} GPSDataStorage;
+

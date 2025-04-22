@@ -106,6 +106,12 @@ void RFManager::tx(char *str_num, int size) {
       Serial.print( "WITH VALUE: ");
       Serial.println(  sentFloat );
       break;
+
+    case GPS_PACKET:
+
+      Serial.println("Sent GPS packet");
+
+      break;
   }
   #endif
 
@@ -320,8 +326,40 @@ void RFManager::transmitAltitude( float data, data_type_t dataType )
     return;
 }
 
+void RFManager::transmitGPS(GPSDataStorage& RocketGPSData)
+{
+  uint8_t toSendArray[16];
+  toSendArray[0] = GPS_PACKET;
+  toSendArray[1] = GPS_DATA;
+  
+  float latitude;
+  float longitude;
+  char lat;
+  char lon;
+  float gpsalt;
 
-sensor_status_t RFManager::transmitData(DOFSensor& dofSensor, AltitudeSensor& altitude_sensor, TemperatureSensor& temperature_sensor, Sensor& gps )
+  latitude = RocketGPSData.latitude;
+  longitude = RocketGPSData.longitude;
+  lat = RocketGPSData.lat;
+  lon = RocketGPSData.lon;
+  gpsalt = RocketGPSData.gpsalt;
+
+  memcpy(&toSendArray[2], &latitude, sizeof(float));
+  memcpy(&toSendArray[6], &longitude, sizeof(float));
+  memcpy(&toSendArray[10], &lat, sizeof(char));
+  memcpy(&toSendArray[11], &lon, sizeof(char));
+  memcpy(&toSendArray[12], &gpsalt, sizeof(float));
+
+  this->tx((char *)toSendArray, sizeof(toSendArray));
+
+
+  return;
+}
+
+
+
+
+sensor_status_t RFManager::transmitData(DOFSensor& dofSensor, AltitudeSensor& altitude_sensor, TemperatureSensor& temperature_sensor)
 {
   transmit1m( dofSensor.per1mDataArray, dofSensor.isCollectedArray, VELOCITY );
   transmit1m( altitude_sensor.per1mPressureDataArray, altitude_sensor.isPressureCollectedArray, ALTITUDE_PRESSURE );
