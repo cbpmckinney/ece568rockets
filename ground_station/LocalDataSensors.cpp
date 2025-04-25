@@ -55,9 +55,9 @@ LocalSensorData LocalDataSensors::collectData() {
             data.gps_year = GPS.year;
             data.gps_fix = GPS.fix;
             data.gps_fixquality = GPS.fixquality;
-            data.gps_latitude = GPS.latitude;
+            data.gps_latitude = GPS.latitude/100;
             data.gps_lat = GPS.lat;
-            data.gps_longitude = GPS.longitude;
+            data.gps_longitude = GPS.longitude/100;
             data.gps_lon = GPS.lon;
             data.gps_speed = GPS.speed;
             data.gps_angle = GPS.angle;
