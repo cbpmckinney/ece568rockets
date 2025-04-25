@@ -40,6 +40,8 @@ class RFManager
 
       void sendStatus( sensorStatus currStatus, rocket_states_t currState  );
       void receiveStatus(uint8_t * statusString);
+      bool receiveStatus2(rocket_states_t statusToReceive);
+
 
       bool receivedCommand( packet_type_t commandToReceive );
       void sendCommand(packet_type_t commandToSend);

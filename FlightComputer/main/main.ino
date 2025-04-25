@@ -10,6 +10,30 @@
 //#include <Wire.h>
 #include <Adafruit_GPS.h>
 
+#include <hardware/regs/m0plus.h>
+#include <hardware/regs/addressmap.h>
+#include <hardware/resets.h>
+
+volatile bool ignitionFailure = false;
+
+inline void reboot() {
+    //reset USB controller
+    reset_block(RESETS_WDSEL_USBCTRL_BITS);
+    //you might want to add other perpherials here if you use them
+
+    //reset the CPU
+    auto & AIRCR_register = *(volatile uint32_t*)(PPB_BASE + M0PLUS_AIRCR_OFFSET);
+    //From datasheet:
+    //31:16 VECTKEY: On writes, write 0x05FA to VECTKEY, otherwise the write is ignored.
+    //15 ENDIANESS: 0 = Little-endian.
+    //14:3 Reserved
+    //2 SYSRESETREQ: Writing 1 to this bit causes the SYSRESETREQ signal to the outer system to be asserted to request a reset.
+    //1 VECTCLRACTIVE: not relevant here
+    AIRCR_register = (0x05FA << M0PLUS_AIRCR_VECTKEY_LSB) | M0PLUS_AIRCR_SYSRESETREQ_BITS;
+}
+
+
+
 #ifdef TEST_MODE_ON_GROUND
   uint8_t simAltitude = 0;
 #endif
@@ -45,7 +69,7 @@ void setup() {
 alarm_id_t TimerID;
 int64_t RelayCallback(alarm_id_t id, void *user_data)
 {
-  digitalWrite(RelayPin, LOW);
+  ignitionFailure = true;
   return 0;
 }
 
@@ -205,7 +229,7 @@ void loop() {
             firstEntry = false;
             Serial.println("ROCKET IN LAUNCH");
             digitalWrite(RelayPin, HIGH); // fires relay
-            TimerID = add_alarm_in_ms(5000, RelayCallback, NULL, false);
+            TimerID = add_alarm_in_ms(10000, RelayCallback, VOID, false);
           }
         //#endif
 
@@ -230,14 +254,19 @@ void loop() {
           rfManager.sendStatus( statusByte, currRocketState );
         }
         #endif
+
+        if (ignitionFailure)
+        {
+          digitalWrite(RelayPin, LOW);
+          Serial.println("Ingition failure detected");
+          currRocketState = IGNITIONFAILURE;
+        }
+
         break;
 
       case FLIGHT:
 
 
-
-
-        //#ifdef DEBUG
           if( firstEntry )
           {
             firstEntry = false;
@@ -246,7 +275,7 @@ void loop() {
             cancel_alarm(TimerID);
             rfManager.sendStatus(statusByte, currRocketState);
           }
-        //#endif
+
           statusByte.bits.altitude_sensor    = altitude_sensor.collectData( );
           #ifdef TEST_MODE_ON_GROUND
           statusByte.bits.temperature_sensor = temperature_sensor.collectData( simAltitude );
@@ -357,11 +386,37 @@ void loop() {
         #endif
           currRocketState = BOOTUP;
           rfManager.sendStatus( statusByte, currRocketState );
+          reboot();
         }
         break;
       default:
         Serial.println("ERROR");
         break;
+
+      case IGNITIONFAILURE:
+        static uint32_t timer2 = millis();
+
+        if (millis() - timer2 > 1000)
+        {
+          Serial.println("In state IGNITION FAILURE");
+          rfManager.sendStatus(statusByte, currRocketState);
+          timer2 = millis();
+        }
+
+        if (rfManager.receivedCommand(REINITIALIZE))
+        {
+          currRocketState = RESET;
+        }
+
+        break;
+
+      case RESET:
+        rfManager.sendStatus(statusByte, currRocketState);
+        Serial.println("Rocket resetting in 5 seconds");
+        delay(5000);
+        reboot();
+        break;
+
   }
 
 
