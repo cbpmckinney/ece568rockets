@@ -415,16 +415,27 @@ void loop() {
 
     case GroundStation::STATE::COLLECT:
 
+      static bool recoveryStarted = false;
       //Serial.println("COLLECT");
       rfManager.receiveData(D_VelocityData, T_TempData, T_HumidityData, A_PressureData, A_TempData, &A_Altitude);
-      Serial.print("Peak Velocity: ");
-      Serial.println(D_VelocityData.peak);
+      
+      //Serial.print("Peak Velocity: ");
+      //Serial.println(D_VelocityData.peak);
+      //Serial.print("Peak Temperature: ");
+      //Serial.println(T_TempData.peak);
+      //Serial.print("Peak Humidity: ");
+      //Serial.println(T_HumidityData.peak);
+      //Serial.print("Peak Pressure: ");
+      //Serial.println(A_PressureData.peak);
 
-      //Serial.print("Temperature: ");
+
+      //Serial.print("Average Velocity: ");
+      //Serial.println(D_VelocityData.average);
+      //Serial.print("Average Temperature: ");
       //Serial.println(T_TempData.average);
-      //Serial.print("Humidity: ");
+      //Serial.print("Average Humidity: ");
       //Serial.println(T_HumidityData.average);
-      //Serial.print("Pressure: ");
+      //Serial.print("Average Pressure: ");
       //Serial.println(A_PressureData.average);
 
 
@@ -452,10 +463,43 @@ void loop() {
       // Update AUX screen with coordinates and arrow?
 
       rfManager.receiveGPSData(RocketGPSData);
-      Serial.print("Landing LAT: ");
-      Serial.print(RocketGPSData.latitude);
-      Serial.print(" ");
-      Serial.println(RocketGPSData.lat);
+      if (RocketGPSData.latitude != 0)
+      {
+        Serial.print("Landing LAT: ");
+        Serial.print(RocketGPSData.latitude);
+        Serial.print(" ");
+        Serial.println(RocketGPSData.lat);
+
+        Serial.print("Landing LON: ");
+        Serial.print(RocketGPSData.longitude);
+        Serial.print(" ");
+        Serial.println(RocketGPSData.lon);
+      }
+
+      if (!recoveryStarted)
+      {
+      Serial.print("Peak Velocity: ");
+      Serial.println(D_VelocityData.peak);
+      Serial.print("Peak Temperature: ");
+      Serial.println(T_TempData.peak);
+      Serial.print("Peak Humidity: ");
+      Serial.println(T_HumidityData.peak);
+      Serial.print("Peak Pressure: ");
+      Serial.println(A_PressureData.peak);
+
+
+      Serial.print("Average Velocity: ");
+      Serial.println(D_VelocityData.average);
+      Serial.print("Average Temperature: ");
+      Serial.println(T_TempData.average);
+      Serial.print("Average Humidity: ");
+      Serial.println(T_HumidityData.average);
+      Serial.print("Average Pressure: ");
+      Serial.println(A_PressureData.average);
+
+      recoveryStarted = true;
+      }
+
 
       // Allow serial commands to change state
       processStateBypassSerialCommands();
