@@ -50,7 +50,7 @@ typedef struct
 } GPSDataStorage;
 
 
-#define TEST_MODE_ON_GROUND 1
+//#define TEST_MODE_ON_GROUND 1
 #ifdef TEST_MODE_ON_GROUND
 extern uint8_t simAltitude;
 #endif

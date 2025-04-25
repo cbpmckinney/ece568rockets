@@ -27,7 +27,7 @@ void setup() {
 #ifdef DEBUG
   Serial.begin(115200);
 
-  while (!Serial) delay(10);  // wait for serial port to open!
+  //while (!Serial) delay(10);  // wait for serial port to open!
   
 #endif
   pinMode(RelayPin, OUTPUT); // relay output pin
@@ -73,8 +73,9 @@ void loop() {
   #ifdef TEST_MODE_ON_GROUND
   static bool isFlying = false;
   static bool doneFlying = false;
-  static bool recoveryStarted = false;
   #endif
+
+  static bool recoveryStarted = false;
 
   switch( currRocketState )
   {
@@ -269,14 +270,14 @@ void loop() {
           //    rfManager.sendStatus( statusByte, currRocketState );
           // }
           // #else
-          // if( dofSensor.doneFlying )
-          // {
-          // #ifdef DEBUG
-          //    firstEntry = true;
-          // #endif
-          //    currRocketState = RECOVERY;
-          //    rfManager.sendStatus( statusByte, currRocketState );
-          // }
+          if( dofSensor.doneFlying )
+          {
+          #ifdef DEBUG
+             firstEntry = true;
+          #endif
+             currRocketState = RECOVERY;
+             rfManager.sendStatus( statusByte, currRocketState );
+          }
           // #endif
           break;
         
@@ -287,7 +288,11 @@ void loop() {
           Serial.println("Recovery Started");
           recoveryStarted = true;
           rfManager.sendStatus(statusByte, currRocketState);
+
+
         }
+
+        
 
         GetGPSData();
         if (RocketGPSData.latitude != 0)
@@ -300,9 +305,14 @@ void loop() {
           delay(1000);
         }
         //delay(2000);
-        
 
-
+        Serial.println("After recovery data dump...");
+        Serial.print("Peak velocity: "); Serial.println(dofSensor.peak);
+        Serial.print("Peak temperature: "); Serial.println(temperature_sensor.peakTemperature);
+        Serial.print("Peak pressure: "); Serial.println(altitude_sensor.peakPressure);
+        Serial.print("Peak humidity: "); Serial.println(temperature_sensor.peakHumidity);
+        Serial.print("Peak index: "); Serial.println(altitude_sensor.currPressureIndex);
+        delay(1000);
 
 
       #ifdef DEBUG
