@@ -16,6 +16,26 @@ William Li
 #include "LocalDataSensors.h"
 #include <Adafruit_GPS.h>
 
+#include <hardware/regs/m0plus.h>
+#include <hardware/regs/addressmap.h>
+#include <hardware/resets.h>
+
+inline void reboot() {
+    //reset USB controller
+    reset_block(RESETS_WDSEL_USBCTRL_BITS);
+    //you might want to add other perpherials here if you use them
+
+    //reset the CPU
+    auto & AIRCR_register = *(volatile uint32_t*)(PPB_BASE + M0PLUS_AIRCR_OFFSET);
+    //From datasheet:
+    //31:16 VECTKEY: On writes, write 0x05FA to VECTKEY, otherwise the write is ignored.
+    //15 ENDIANESS: 0 = Little-endian.
+    //14:3 Reserved
+    //2 SYSRESETREQ: Writing 1 to this bit causes the SYSRESETREQ signal to the outer system to be asserted to request a reset.
+    //1 VECTCLRACTIVE: not relevant here
+    AIRCR_register = (0x05FA << M0PLUS_AIRCR_VECTKEY_LSB) | M0PLUS_AIRCR_SYSRESETREQ_BITS;
+}
+
 // Launch Code
 #define PIN_VALUE_1 2
 #define PIN_VALUE_2 1
@@ -47,7 +67,8 @@ namespace GroundStation {
     COLLECT,
     RECOVERY,
     VERIFY_DATA,
-    ERR
+    ERR,
+    RESET
   };
 };
 
@@ -118,9 +139,7 @@ bool pinCorrect = false;
 bool buttonPressed = false;
 bool sendLaunchCommand = false;
 
-
-uint8_t statbuf[3];  // buffer for receiving status messages
-int incomingByte;
+int incomingByte;  // for serial keyboard control
 
 void setup() {
   state = GroundStation::STATE::BOOTUP;
@@ -146,8 +165,6 @@ void setup() {
 
 void loop() {
 
-  static uint8_t statbuf[3];  // buffer for receiving status messages
-
   switch(state) {
     case GroundStation::STATE::BOOTUP:
       state = GroundStation::STATE::CONN_WAIT;
@@ -160,20 +177,15 @@ void loop() {
         statusByte.bits.RFtransmitter = rfManager.initialize();
         RFInit = !RFInit;
       } else {
-        rfManager.receiveStatus(statbuf);
 
-        if (statbuf[0] == STATUS and statbuf[2] == SAFE)
+        if (rfManager.receiveStatus2(SAFE))
         {
           Serial.println("Rocket in safe mode, message received!!");
           updateLEDColor(0, 255, 0);
           state = GroundStation::STATE::SAFE;
-          statbuf[2] = 0;
         }
       }
       
-      
-
-
       // Collect data from the local data sensors
       // Internally only collects every 1 second
       groundStationData = localDataSensors.collectData();
@@ -201,6 +213,9 @@ void loop() {
         4. Update state to ARM (state = ARM;)
       }
       */
+
+      static uint32_t timer_safe = millis();
+
       incomingByte = Serial.read();
       if (incomingByte == 75)
       {
@@ -211,27 +226,26 @@ void loop() {
       }
 
       if (keyInserted()) {
-        Serial.println("Key switched, ARMING!");
+        if (millis() - timer_safe > 1000)
+        {
+          Serial.println("Key switched, ARMING!");
+          rfManager.sendCommand(ARM_PACKET);
+          timer_safe = millis();
+        }
         mainScreen.key_inserted = true;
-        rfManager.sendCommand(ARM_PACKET);
       } 
       else
       {
         mainScreen.key_inserted = false;
       }
 
-
-      rfManager.receiveStatus(statbuf);
-
-      if (statbuf[0] == STATUS and statbuf[2] == ARM)
+      if (rfManager.receiveStatus2(ARM))
       {
         Serial.println("Rocket in ARM mode, message received!!");
         mainScreen.rocket_armed = true;
         updateLEDColor(255,45,11);
         state = GroundStation::STATE::ARM;
       }
-
-
 
       // Collect data from the local data sensors
       // Internally only collects every 1 second
@@ -244,13 +258,20 @@ void loop() {
       processUserInput();
 
       // Allow serial commands to change state
-      //processStateBypassSerialCommands();
+      processStateBypassSerialCommands();
 
       break;
 
     // ARM---------------------------------------
     case GroundStation::STATE::ARM:
 
+      if (keyInserted()) {
+        mainScreen.key_inserted = true;
+      } 
+      else
+      {
+        mainScreen.key_inserted = false;
+      }
 
       if (mainScreen.ready_to_submit_pin) {
         // User is about to submit pin, check if correct as
@@ -262,28 +283,27 @@ void loop() {
        }
       }
 
-      if (mainScreen.prime_permissive) {
+      static uint32_t timer_prime = millis();
+
+      if (mainScreen.prime_permissive and (millis() - timer_prime > 1000)) {
         // User (screen) gave go-ahead on priming rocket.
         // Send message to rocket signifying ground station ready to PRIME
         //  *requires a response back
         // This continuously sends, maybe not?
         rfManager.sendCommand(RTL_PACKET);
+        timer_prime = millis();
       }
 
-      incomingByte = Serial.read();
-      if (incomingByte == 80)
-      {
-        incomingByte = Serial.read();
-        Serial.println("Pin override, PRIMING");
-        rfManager.sendCommand(RTL_PACKET);
-        //state = GroundStation::STATE::FIRE;
-      }
+      // incomingByte = Serial.read();
+      // if (incomingByte == 80)
+      // {
+      //   incomingByte = Serial.read();
+      //   Serial.println("Pin override, PRIMING");
+      //   rfManager.sendCommand(RTL_PACKET);
+      //   //state = GroundStation::STATE::FIRE;
+      // }
 
-
-
-      rfManager.receiveStatus(statbuf);
-
-      if (statbuf[0] == STATUS and statbuf[2] == READY_FOR_LAUNCH)
+      if (rfManager.receiveStatus2(READY_FOR_LAUNCH))
       {
         Serial.println("Rocket in RTL mode, message received!!");
         updateLEDColor(255, 0, 0);
@@ -301,7 +321,7 @@ void loop() {
       processUserInput();
 
       // Allow serial commands to change state
-      //processStateBypassSerialCommands();
+      processStateBypassSerialCommands();
 
       break;
       
@@ -324,30 +344,7 @@ void loop() {
       }
 
       if (sendLaunchCommand) {
-
         state = GroundStation::STATE::FIRE;
-
-        //rfManager.sendCommand(LAUNCH_PACKET);
-
-        //rfManager.receiveStatus(statbuf);
-
-        //if (statbuf[2] == LAUNCH)
-        //{
-        //  Serial.println("Rocket in LAUNCH mode, message received!!");
-          // updateLEDColor(255, 0, 0);
-          // delay(100);
-          // updateLEDColor(0, 0, 0);
-          // delay(100);
-          // updateLEDColor(255, 0, 0);
-          // delay(100);
-          // updateLEDColor(0, 0, 0);
-          // delay(100);
-          // updateLEDColor(255, 0, 0);
-          // delay(100);
-          // updateLEDColor(0, 0, 0);
-          // delay(100);
-          //state = GroundStation::STATE::COLLECT;
-        //}
       }
 
 
@@ -376,7 +373,7 @@ void loop() {
       processUserInput();
 
       // Allow serial commands to change state
-      //processStateBypassSerialCommands();
+      processStateBypassSerialCommands();
 
       break;
 
@@ -387,20 +384,25 @@ void loop() {
         rfManager.sendCommand(LAUNCH_PACKET);
         LaunchCommandSent = true;
       }
-      rfManager.receiveStatus(statbuf);
-      //Serial.println(statbuf[2]);
 
-      if (statbuf[2] == LAUNCH)
+      if (rfManager.receiveStatus2(LAUNCH))
       {
         Serial.println("Rocket acks launch command");
         mainScreen.rocket_armed = true;
         updateLEDColor(255,45,11);
-        //state = GroundStation::STATE::COLLECT;
+        state = GroundStation::STATE::COLLECT;
       }
-      if (statbuf[0] == STATUS and statbuf[2] == FLIGHT)
+
+      if (rfManager.receiveStatus2(FLIGHT))
       {
         Serial.println("Rocket in flight!");
         state = GroundStation::STATE::COLLECT;
+      }
+
+      if (rfManager.receiveStatus2(IGNITIONFAILURE))
+      {
+        Serial.println("Ignition failure, switching to ERROR state");
+        state = GroundStation::STATE::ERR;
       }
 
 
@@ -447,12 +449,17 @@ void loop() {
       // Allow serial commands to change state
       processStateBypassSerialCommands();
 
-      rfManager.receiveStatus(statbuf);
 
-      if (statbuf[0] == STATUS and statbuf[2] == RECOVERY)
+      if (rfManager.receiveStatus2(RECOVERY))
       {
         Serial.println("Entering Recovery");
         state = GroundStation::STATE::RECOVERY;
+      }
+
+      if (rfManager.receiveStatus2(IGNITIONFAILURE))
+      {
+        Serial.println("Entering Recovery");
+        state = GroundStation::STATE::ERR;
       }
 
 
@@ -507,6 +514,36 @@ void loop() {
 
     case GroundStation::STATE::VERIFY_DATA:
 
+      break;
+
+    case GroundStation::STATE::ERR:
+      static uint32_t timer_err = millis();
+      
+      last_button_state = read_button_value;
+      groundStationData = localDataSensors.collectData();
+      updateDataDisplay();
+      processUserInput();
+
+      if (millis() - timer_err > 1000)
+      {
+        rfManager.sendCommand(REINITIALIZE);
+        timer_err = millis();
+      }
+
+      if (rfManager.receiveStatus2(RESET))
+      {
+        state = GroundStation::STATE::RESET;
+      }
+
+      processStateBypassSerialCommands();
+
+      break;
+
+    case GroundStation::STATE::RESET:
+
+      Serial.println("RESETTING IN 1 SECOND");
+      delay(1000);
+      reboot();
       break;
 
   }
@@ -583,7 +620,7 @@ void processStateBypassSerialCommands() {
       mainScreen.rocket_armed = false;
 
       state = GroundStation::STATE::COLLECT;
-    } 
+    }
     else if (strstr(incomingSerialData, "RECOVERY")) 
     {
       Serial.println("USER CMD: RECOVERY RECEIVED");
@@ -592,7 +629,17 @@ void processStateBypassSerialCommands() {
       mainScreen.rocket_armed = false;
 
       state = GroundStation::STATE::RECOVERY;
-    } 
+    }
+    else if (strstr(incomingSerialData, "RESET"))
+    {
+      Serial.println("USER CMD: RESET");
+      state = GroundStation::STATE::RESET;
+    }  
+    else if (strstr(incomingSerialData, "ERR"))
+    {
+      Serial.println("USER CMD: ERR");
+      state = GroundStation::STATE::ERR;
+    }  
     else if (strstr(incomingSerialData, "?")) 
     {
       Serial.print("    BOOTUP = ");    Serial.println("0");
@@ -604,6 +651,7 @@ void processStateBypassSerialCommands() {
       Serial.print("    COLLECT = ");   Serial.println("6");
       Serial.print("    RECOVERY = ");  Serial.println("7");
       Serial.print("    ERR = ");       Serial.println("8");
+      Serial.print("    RESET = ");     Serial.println("9");
       Serial.print("Current ground station state is: "); Serial.println(state);
         
     }
@@ -636,8 +684,8 @@ void initializePeripherals() {
 }
 
 void initializeScreens() {
-  mainScreen.initialize(0x3C);
-  auxScreen.initialize(0x3D);
+  mainScreen.initialize(0x3D);
+  auxScreen.initialize(0x3C);
 
   mainScreen.showMenu();
 

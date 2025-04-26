@@ -10,7 +10,9 @@ typedef enum
     FLIGHT,
     RECOVERY,
     POST_FLIGHT,
-    POWERONFAILURE
+    POWERONFAILURE,
+    IGNITIONFAILURE,
+    RESET
 } rocket_states_t;
 
 typedef enum

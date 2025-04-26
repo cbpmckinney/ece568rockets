@@ -114,6 +114,29 @@ void RFManager::receiveStatus(uint8_t * outbuf)
 }
 
 
+bool RFManager::receiveStatus2(rocket_states_t statusToReceive)
+{
+    if( rf95.available())
+    {
+      uint8_t buf[3];
+      uint8_t len = sizeof(buf);
+      if( rf95.recv(buf, &len) )
+      {
+        if( buf[0] == STATUS and buf[2] == statusToReceive)
+        {
+            return true;
+        }
+      }
+      else
+      {
+        return false;
+      }
+    }
+    return false;
+}
+
+
+
 void RFManager::receiveData(DataStorage &D_VelocityData, DataStorage &T_TempData, DataStorage &T_HumidityData, DataStorage &A_PressureData, DataStorage &A_TempData, float * A_Altitude)
 {
 
