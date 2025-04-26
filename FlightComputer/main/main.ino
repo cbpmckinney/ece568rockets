@@ -151,7 +151,16 @@ void loop() {
             firstEntry = false;
             Serial.println("ROCKET IN SAFE");
           }
-        #endif
+        #endif 
+
+        static uint32_t timer_safe = millis();
+        if (millis() - timer_safe > 1000)
+        {
+          rfManager.sendStatus(statusByte, currRocketState);
+          timer_safe = millis();
+        }
+
+
         if( rfManager.receivedCommand( ARM_PACKET ) )
         {
           Serial.println("ARM Packet Received from Ground Station");
@@ -229,7 +238,7 @@ void loop() {
             firstEntry = false;
             Serial.println("ROCKET IN LAUNCH");
             digitalWrite(RelayPin, HIGH); // fires relay
-            TimerID = add_alarm_in_ms(10000, RelayCallback, VOID, false);
+            TimerID = add_alarm_in_ms(10000, RelayCallback, NULL, false);
           }
         //#endif
 

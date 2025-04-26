@@ -213,6 +213,9 @@ void loop() {
         4. Update state to ARM (state = ARM;)
       }
       */
+
+      static uint32_t timer_safe = millis();
+
       incomingByte = Serial.read();
       if (incomingByte == 75)
       {
@@ -222,10 +225,11 @@ void loop() {
         //state = GroundStation::STATE::FIRE;
       }
 
-      if (keyInserted()) {
+      if (keyInserted() and (millis() - timer_safe > 1000)) {
         Serial.println("Key switched, ARMING!");
         mainScreen.key_inserted = true;
         rfManager.sendCommand(ARM_PACKET);
+        timer_safe = millis();
       } 
       else
       {
@@ -251,7 +255,7 @@ void loop() {
       processUserInput();
 
       // Allow serial commands to change state
-      //processStateBypassSerialCommands();
+      processStateBypassSerialCommands();
 
       break;
 
@@ -304,7 +308,7 @@ void loop() {
       processUserInput();
 
       // Allow serial commands to change state
-      //processStateBypassSerialCommands();
+      processStateBypassSerialCommands();
 
       break;
       
@@ -356,7 +360,7 @@ void loop() {
       processUserInput();
 
       // Allow serial commands to change state
-      //processStateBypassSerialCommands();
+      processStateBypassSerialCommands();
 
       break;
 
