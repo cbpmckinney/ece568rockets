@@ -265,14 +265,13 @@ void loop() {
     // ARM---------------------------------------
     case GroundStation::STATE::ARM:
 
-     if (keyInserted()) {
+      if (keyInserted()) {
         mainScreen.key_inserted = true;
       } 
       else
       {
         mainScreen.key_inserted = false;
       }
-
 
       if (mainScreen.ready_to_submit_pin) {
         // User is about to submit pin, check if correct as
