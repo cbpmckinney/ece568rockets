@@ -678,7 +678,7 @@ void initializeScreens() {
 
   Serial.println("Screens initialized!");
 
-  //testFullLaunch(mainScreen);
+  testFullLaunch(mainScreen);
   //testDataScreen(mainScreen, auxScreen);
 
   delay(500);

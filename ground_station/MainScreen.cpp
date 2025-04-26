@@ -405,10 +405,19 @@ void MainScreen::receiveScreenInput(UserInput input) {
                     // This can be done by checking if user is about to ENC_PRESS to submit pin, verifying pin,
                     // then setting pin_correct to true/false.
                     if (pin_correct && key_inserted) {
+                        Serial.print("Pin and Key validated");
                         Serial.print("Jumping to: "); Serial.println(targetScreen); // RED BUTTON LAUNCH SCREEN
                         jumpToScreen(targetScreen);
                         prime_permissive = true;
                     } else {
+                        if (!pin_correct) {
+                            Serial.print("MainScreen: Pin Incorrect");
+                        }
+
+                        if (!key_inserted) {
+                            Serial.print("MainScreen: Key Not Inserted");
+                        }
+
                         Serial.print("Jumping to: "); Serial.println(ScreenEnums::Screen::LAUNCH_WRONG_PIN); // RED BUTTON LAUNCH SCREEN
                         jumpToScreen(ScreenEnums::Screen::LAUNCH_WRONG_PIN);
                     }
