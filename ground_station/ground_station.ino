@@ -225,11 +225,14 @@ void loop() {
         //state = GroundStation::STATE::FIRE;
       }
 
-      if (keyInserted() and (millis() - timer_safe > 1000)) {
-        Serial.println("Key switched, ARMING!");
+      if (keyInserted()) {
+        if (millis() - timer_safe > 1000)
+        {
+          Serial.println("Key switched, ARMING!");
+          rfManager.sendCommand(ARM_PACKET);
+          timer_safe = millis();
+        }
         mainScreen.key_inserted = true;
-        rfManager.sendCommand(ARM_PACKET);
-        timer_safe = millis();
       } 
       else
       {
@@ -262,6 +265,14 @@ void loop() {
     // ARM---------------------------------------
     case GroundStation::STATE::ARM:
 
+     if (keyInserted()) {
+        mainScreen.key_inserted = true;
+      } 
+      else
+      {
+        mainScreen.key_inserted = false;
+      }
+
 
       if (mainScreen.ready_to_submit_pin) {
         // User is about to submit pin, check if correct as
@@ -273,22 +284,25 @@ void loop() {
        }
       }
 
-      if (mainScreen.prime_permissive) {
+      static uint32_t timer_prime = millis();
+
+      if (mainScreen.prime_permissive and (millis() - timer_prime > 1000)) {
         // User (screen) gave go-ahead on priming rocket.
         // Send message to rocket signifying ground station ready to PRIME
         //  *requires a response back
         // This continuously sends, maybe not?
         rfManager.sendCommand(RTL_PACKET);
+        timer_prime = millis();
       }
 
-      incomingByte = Serial.read();
-      if (incomingByte == 80)
-      {
-        incomingByte = Serial.read();
-        Serial.println("Pin override, PRIMING");
-        rfManager.sendCommand(RTL_PACKET);
-        //state = GroundStation::STATE::FIRE;
-      }
+      // incomingByte = Serial.read();
+      // if (incomingByte == 80)
+      // {
+      //   incomingByte = Serial.read();
+      //   Serial.println("Pin override, PRIMING");
+      //   rfManager.sendCommand(RTL_PACKET);
+      //   //state = GroundStation::STATE::FIRE;
+      // }
 
       if (rfManager.receiveStatus2(READY_FOR_LAUNCH))
       {
