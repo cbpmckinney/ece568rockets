@@ -435,6 +435,11 @@ void loop() {
   if (Serial.available() > 0) {
       incomingByte = Serial.read();
   }
+  if (incomingByte == 57) // 9 
+  {
+    currRocketState = RESET;
+  }
+
   if( incomingByte == 49 ) //1
   {
     firstEntry = true;
@@ -469,7 +474,7 @@ void loop() {
         break;
 
       case POST_FLIGHT:
-        currRocketState = BOOTUP;
+        currRocketState = RESET;
         break;
     }
   }
