@@ -100,6 +100,7 @@ void loop() {
   #endif
 
   static bool recoveryStarted = false;
+  static int resetmessagecounter = 0;
 
   switch( currRocketState )
   {
@@ -415,12 +416,23 @@ void loop() {
         if (rfManager.receivedCommand(REINITIALIZE))
         {
           currRocketState = RESET;
+          resetmessagecounter = 0;
         }
 
         break;
 
       case RESET:
-        rfManager.sendStatus(statusByte, currRocketState);
+        static uint32_t timer_reset = millis();
+        while (resetmessagecounter < 5)
+        {
+          if (millis() - timer_reset > 1000)
+          {
+            rfManager.sendStatus(statusByte, currRocketState);
+            timer_reset = millis();
+            resetmessagecounter++;
+          }
+        }
+
         Serial.println("Rocket resetting in 5 seconds");
         delay(5000);
         reboot();

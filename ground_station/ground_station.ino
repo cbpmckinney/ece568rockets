@@ -684,8 +684,8 @@ void initializePeripherals() {
 }
 
 void initializeScreens() {
-  mainScreen.initialize(0x3C);
-  auxScreen.initialize(0x3D);
+  mainScreen.initialize(0x3D);
+  auxScreen.initialize(0x3C);
 
   mainScreen.showMenu();
 
