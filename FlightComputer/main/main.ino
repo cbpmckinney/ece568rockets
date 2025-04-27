@@ -331,6 +331,10 @@ void loop() {
 
         }
 
+        if (!Serial)
+        {
+            Serial.begin(115200);
+        }
         
 
         GetGPSData();
