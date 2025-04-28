@@ -36,10 +36,19 @@ void AltitudeSensor::updateAverage(float currVal, float* toUpdate, float average
     (*toUpdate) = (*sum)/(*countToUse);
 }
 
-void AltitudeSensor::updatePeak(float currVal, float* toUpdate)
+void AltitudeSensor::updatePeak(float currVal, float* toUpdate, bool invert)
 {
-  if( currVal > (*toUpdate))
+  if (invert)
+  {
+    if( currVal < (*toUpdate))
     (*toUpdate) = currVal;
+  }
+  else
+  {
+    if( currVal > (*toUpdate))
+    (*toUpdate) = currVal;
+  }
+
 }
 
 void AltitudeSensor::updatePer1MDataArray( float currVal, int altitude, float toUpdate[], int* currSavedAltitude, dataPointStatus_t isCollectedArray[] )
@@ -98,7 +107,7 @@ sensor_status_t AltitudeSensor::setInitialDataValues()
     this->averageTemperature = 0;
     this->averagePressure = 0;
     this->peakTemperature = 0;
-    this->peakPressure = 0;
+    this->peakPressure = 1000000;
     this->currAltitude = 0;
     for (int i = 0; i < 1000; i++) {
         this->averageTemperatureDataArray[i] = 0;
@@ -155,12 +164,12 @@ sensor_status_t AltitudeSensor::collectData( )
 
   float currTemp = bmp.temperature;
   updateAverage(currTemp, &(this->averageTemperature), averageTemperatureDataArray, &(this->averageTempCount), &(this->currTempIndex), &(this->temperatureSum));
-  updatePeak( currTemp,  &(this->peakTemperature));
+  updatePeak( currTemp,  &(this->peakTemperature), false);
   updatePer1MDataArray( currTemp, currAltitudeDifferenceSinceStart, per1mTemperatureDataArray, &(this->savedTemperatureAltitude), isTemperatureCollectedArray );
   
   float currPressure = (bmp.pressure / 100.0);
   updateAverage(currPressure, &(this->averagePressure), averagePressureDataArray, &(this->averagePressureCount), &(this->currPressureIndex), &(this->pressureSum));
-  updatePeak( currPressure,  &(this->peakPressure));
+  updatePeak( currPressure,  &(this->peakPressure), true);
   updatePer1MDataArray( currPressure, currAltitudeDifferenceSinceStart, per1mPressureDataArray, &(this->savedPressureAltitude), isPressureCollectedArray );
 
 #ifdef DEBUG_ALTITUDE

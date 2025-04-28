@@ -76,10 +76,10 @@ void AuxiliaryScreen::showLocalData() {
     
     // GPS Lat and Long
     display.setCursor(0,y_scale*9);
-    display.print(F("Lat.: ")); display.print(storedLocalData.gps_latitude); display.println(storedLocalData.gps_lat);
+    display.print(F("Lat.: ")); display.print(storedLocalData.gps_latitude/100); display.println(storedLocalData.gps_lat);
 
     display.setCursor(0,y_scale*10);
-    display.print(F("Lon.: ")); display.print(storedLocalData.gps_longitude); display.println(storedLocalData.gps_lon);
+    display.print(F("Lon.: ")); display.print(storedLocalData.gps_longitude/100); display.println(storedLocalData.gps_lon);
 
     // Angle
     display.setCursor(0,y_scale*11);

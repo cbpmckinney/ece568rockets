@@ -31,7 +31,7 @@ class AltitudeSensor
         sensor_status_t setInitialDataValues();
         sensor_status_t collectData( );
         void updateAverage(float currVal, float* toUpdate, float averageArray[], unsigned int* countToUse, unsigned int* currIndex, float* sum);
-        void updatePeak(float currVal, float* toUpdate);
+        void updatePeak(float currVal, float* toUpdate, bool invert);
         void updatePer1MDataArray( float currVal, int altitude, float toUpdate[], int* currSavedAltitude, dataPointStatus_t isCollectedArray[] );
         void printPer1MData( float toPrint[], int currSavedAltitude );
         void printArray( float toPrint[], int size );

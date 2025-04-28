@@ -345,6 +345,10 @@ void loop() {
           Serial.print(RocketGPSData.latitude/100);
           Serial.print(" ");
           Serial.println(RocketGPSData.lat);
+          Serial.print("Rocket LON: ");
+          Serial.print(RocketGPSData.longitude/100);
+          Serial.print(" ");
+          Serial.println(RocketGPSData.lon);
           delay(1000);
         }
         //delay(2000);
